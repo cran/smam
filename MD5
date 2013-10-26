@@ -1,0 +1,11 @@
+11b26bca6b4784ac89154a46cd919706 *ChangeLog
+6b07a551f65c834dea06ddaa8f0cd7a0 *DESCRIPTION
+4ce3f108f8cb7cb8e5f0bc8a049cea75 *NAMESPACE
+332261d90bf856cc4528300c7ba4605e *R/bmme.R
+e0a92a8a2e9b6aebaa0002a1fedf6b2c *R/movres.R
+9ad7a258de2dd391fcfde01984b91379 *man/dtm.Rd
+318af21c2f7491de1943b4a889d9eb9e *man/fitBmme.Rd
+2d90fb6d5ad7a963ce33801f67a5e166 *man/fitMovRes.Rd
+cf8a771958de0ff7de8fecce8129f6bd *man/rMovRes.Rd
+8e6a097f8cc5a6877e8314a5ab1a9532 *man/rbmme.Rd
+680e1ed45e81c81ad5361dd3f6731165 *src/altb.c

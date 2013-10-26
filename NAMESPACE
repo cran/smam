@@ -1,0 +1,13 @@
+useDynLib(smam)
+
+
+## exportPattern(".")
+
+## BM with ME
+export(fitBmme,
+       rbmme)
+
+export(fitMovRes, rMovRes, cllk.m1,
+       dtm, 
+       dtr)
+       
