@@ -1,6 +1,6 @@
-11b26bca6b4784ac89154a46cd919706 *ChangeLog
-6b07a551f65c834dea06ddaa8f0cd7a0 *DESCRIPTION
-4ce3f108f8cb7cb8e5f0bc8a049cea75 *NAMESPACE
+991ea0e90141bf8d7ebad24fe21d838f *ChangeLog
+4b69281a07fce53e8e711024a7a9e406 *DESCRIPTION
+e71ec683464d8db6d3a6f8acc790c7f1 *NAMESPACE
 332261d90bf856cc4528300c7ba4605e *R/bmme.R
 e0a92a8a2e9b6aebaa0002a1fedf6b2c *R/movres.R
 9ad7a258de2dd391fcfde01984b91379 *man/dtm.Rd
@@ -8,4 +8,4 @@ e0a92a8a2e9b6aebaa0002a1fedf6b2c *R/movres.R
 2d90fb6d5ad7a963ce33801f67a5e166 *man/fitMovRes.Rd
 cf8a771958de0ff7de8fecce8129f6bd *man/rMovRes.Rd
 8e6a097f8cc5a6877e8314a5ab1a9532 *man/rbmme.Rd
-680e1ed45e81c81ad5361dd3f6731165 *src/altb.c
+49ec4ce0b9a60c3a44525f67bad626a0 *src/altb.c

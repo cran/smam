@@ -41,16 +41,14 @@ double pmr1(double w, double t, double lamM, double lamR) {
   return(dens);
 }
 
-double pmr(double *w, double *t, double *lamR, double *lamM, int *wlen,
-	   double *dens) {
+void pmr(double *w, double *t, double *lamR, double *lamM, int *wlen,
+	 double *dens) {
   int i;
   for (i = 0; i < *wlen; i++) {
     dens[i] = pmr1(w[i], t[i], *lamM, *lamR);
   }
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
 
 /* density of resting for duration w during (0, t), starting from moving */
 /* double stayDens1(double w, double t, double lamR, double lamM) { */
@@ -80,7 +78,6 @@ double pmr(double *w, double *t, double *lamR, double *lamM, int *wlen,
 /* } */
 
 
-////////////////////////////////////////////////////////////////////////
 /* Simulation code 
    Note the orders of mm and mr
 */
@@ -95,14 +92,14 @@ void staySim(int *n, double *s, double *mm, double *mr,
   int i, ind;
   double tr, tm;
   for (i = 0; i < *n; i++) {
-    tr = 0.0; tm = 0.0;
-    while (1) {
-      tm += rexp(*mm); ind = 1; // time in moving
-      if (tm + tr > *s) break;
-      tr += rexp(*mr); ind = 2; // time in resting
-      if (tm + tr > *s) break;
-    }
-    if (ind == 1) t[i] = *s - tr; // last period is moving
-    else t[i] = tm;  // last period is resting
+      tr = 0.0; tm = 0.0;
+      while (1) {
+	  tm += rexp(*mm); ind = 1; /* time in moving */
+	  if (tm + tr > *s) break;
+	  tr += rexp(*mr); ind = 2; /* time in resting */
+	  if (tm + tr > *s) break;
+      }
+      if (ind == 1) t[i] = *s - tr; /* last period is moving */
+      else t[i] = tm;  /* last period is resting */
   }
 }
