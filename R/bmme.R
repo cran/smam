@@ -9,6 +9,37 @@
 ####      delta: vector of dim, measurement error sd, recyclable
 #### Output:
 ####      a matrix of dim + 1 columns: time, location coordinates
+
+
+#' Sampling from Brown Motion with Measurement Error
+#'
+#' Given the volatility parameters of a Brownian motion and normally
+#' distributed measurement errors, generate the process at discretely
+#' observed time points of a given dimension.
+#'
+#' @param time vector of time points at which observations are to be sampled
+#' @param dim (integer) dimension of the Brownian motion
+#' @param sigma volatility parameter (sd) of the Brownian motion
+#' @param delta sd parameter of measurement error
+#'
+#' @return
+#'   A \code{data.frame} whose first column is the time points and whose
+#'   other columns are coordinates of the locations.
+#'
+#' @references
+#' Pozdnyakov V., Meyer, TH., Wang, Y., and Yan, J. (2013)
+#' On modeling animal movements using Brownian motion with measurement
+#' error. Ecology 95(2): p247--253. doi:doi:10.1890/13-0532.1.
+#'
+#' @examples
+#' tgrid <- seq(0, 10, length = 1001)
+#' ## make it irregularly spaced
+#' tgrid <- sort(sample(tgrid, 800))
+#' dat <- rbmme(tgrid, 1, 1)
+#' plot(dat[,1], dat[,2], xlab="t", ylab="X(t)", type="l")
+#'
+#' @export
+
 rbmme <- function(time, dim = 2,  sigma = 1, delta = 1) {  
     n <- length(time)
     dat <- matrix(NA_real_, n, dim)
@@ -29,11 +60,12 @@ rbmme <- function(time, dim = 2,  sigma = 1, delta = 1) {
 ####      param: vector of (sigma, delta)
 #### Output:
 ####      a banded sparse covariance matrix of the increments
+
 getSparseSigma <- function(tinc, param) {
     n <- length(tinc)
     d0 <- c(tinc * param[1]^2 + 2 * param[2]^2)   
     d1 <- rep(- param[2]^2, n - 1)
-    bandSparse(n, k = c(0, 1), diagonals = list(d0, d1), symmetric = TRUE)
+    Matrix::bandSparse(n, k = c(0, 1), diagonals = list(d0, d1), symmetric = TRUE)
 }
 
 #### multivariate density using sparse covariance matrix
@@ -92,12 +124,53 @@ bmme.start <- function(dat) {
 #### Output
 ####      vector containing parameter estimate, standard error, and convergence code
 
-fitBmme <- function(dat, start = NULL, method = "Nelder-Mead",
+
+#' Fit a Brownian Motion with Measurement Error
+#'
+#' Given discretely observed animal movement locations, fit a Brownian
+#' motion model with measurement errors.
+#'
+#' @param data a data.frame whose first column is the observation time, and other
+#'     columns are location coordinates.
+#' @param start starting value of the model, a vector of two component, one for
+#'     sigma (sd of BM) and the other for delta (sd for measurement error).
+#'     If unspecified (NULL), a moment estimator will be used assuming equal
+#'     sigma and delta.
+#' @param method the method argument to feed \code{optim}.
+#' @param optim.control a list of control that is passed down to \code{optim}.
+#'
+#' @details
+#'   The joint density of the increment data is multivariate normal with a
+#'   sparse (tri-diagonal) covariance matrix. Sparse matrix operation from
+#'   package Matrix is used for computing efficiency in handling large data.
+#'
+#' @return
+#'   A list of the following components:
+#'   \item{estimate }{the esimated parameter vector}
+#'   \item{var.est }{variance matrix of the estimator}
+#'   \item{loglik }{loglikelihood evaluated at the estimate}
+#'   \item{convergence}{convergence code from optim}
+#'
+#' @references
+#' Pozdnyakov V., Meyer, TH., Wang, Y., and Yan, J. (2013)
+#' On modeling animal movements using Brownian motion with measurement
+#' error. Ecology 95(2): p247--253. doi:doi:10.1890/13-0532.1.
+#' @seealso
+#'   \code{\link{fitMovRes}}
+#' @examples
+#' set.seed(123)
+#' tgrid <- seq(0, 500, by = 1)
+#' dat <- rbmme(tgrid, sigma = 1, delta = 0.5)
+#' fit <- fitBmme(dat)
+#' fit
+#' @export
+
+fitBmme <- function(data, start = NULL, method = "Nelder-Mead",
                     optim.control = list()) {
-    if (is.null(start)) start <- bmme.start(dat)
-    dinc <- apply(dat, 2, diff)
+    if (is.null(start)) start <- bmme.start(data)
+    dinc <- apply(data, 2, diff)
     fit <- optim(start, nllk.bmme, dinc = dinc, hessian = TRUE, method=method, control = optim.control)
-    ## Sigma <- getSparseSigma(dat[,1], fit$par)
+    ## Sigma <- getSparseSigma(data[,1], fit$par)
     ans <- list(estimate = fit$par,
                 var.est = solve(fit$hessian),
                 loglik = - fit$value,

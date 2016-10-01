@@ -1,3 +1,9 @@
+#' @importFrom stats dnorm integrate optim rexp rnorm
+#' @importFrom methods is
+#' @importFrom numDeriv hessian
+#' @importFrom Rcpp evalCpp
+#' @useDynLib smam
+
 ## simulation of breaking time points bbs
 ## for a 2 state telegraph process
 sim1.times.bbz <- function(s, lam1, lam2) {
@@ -44,14 +50,48 @@ sim1.bbz <- function(s, sigma, time, brtimes, t0moving=TRUE) {
 }
 
 ## simulation a moving-resting path given a grid time
+
+#' Sampling from a Moving-Resting Process with Embedded Brownian Motion
+#'
+#' A moving-resting process consists of two states: moving and resting.
+#' The transition between the two states is modeled by an alternating
+#' renewal process, with expenentially distributed duration. An animal
+#' stays at the same location while resting, and moves according to a
+#' Brownian motion while moving.
+#'
+#' @param time time points at which observations are to be simulated
+#' @param lamM rate parameter of the exponential duration while moving
+#' @param lamR rate parameter of the exponential duration while resting
+#' @param sigma volatility parameter of the Brownian motion while moving
+#' @param s0 the state at time 0, must be one of "m" or "r", for moving and
+#' resting, respectively
+#' @param dim (integer) dimension of the Brownian motion
+#'
+#' @return
+#' A \code{data.frame} whose first column is the time points and whose
+#' other columns are coordinates of the locations.
+#' @references
+#' Yan, J., Chen, Y., Lawrence-Apfel, K., Ortega, I. M., Pozdnyakoc, V.,
+#' Williams, S., and Meyer, T. (2014) A moving-resting process with an
+#' embedded Brownian motion for animal movements.
+#' Population Ecology. 56(2): 401--415.
+#' @examples
+#' tgrid <- seq(0, 10, length=1001)
+#' ## make it irregularly spaced
+#' tgrid <- sort(sample(tgrid, 800))
+#' dat <- rMovRes(tgrid, 1, 1, 1, "m")
+#' plot(dat[,1], dat[,2], xlab="t", ylab="X(t)", type='l')
+#' 
+#' @export
+
 rMovRes <- function(time, lamM, lamR, sigma, s0, dim = 2) {
     stopifnot(s0 %in% c("m", "r"))
     t0moving <- (s0 == "m")
     lam1 <- if (t0moving) lamM else lamR
     lam2 <- if (t0moving) lamR else lamM
-    s <- tail(time, 1)
-    brtimes <- sim1.times.bbz(s, lam1, lam2)
-    coord <- replicate(dim, sim1.bbz(s, sigma, time, brtimes, t0moving))
+    tmax <- time[length(time)]
+    brtimes <- sim1.times.bbz(tmax, lam1, lam2)
+    coord <- replicate(dim, sim1.bbz(tmax, sigma, time, brtimes, t0moving))
     data.frame(time = time, coord)
 }
 
@@ -126,6 +166,7 @@ dtr.rm <- function(w, t, lamM, lamR, mb = TRUE) {
     ifelse(w > t | w < 0, 0, dens)
 }
 
+
 dtm.m <- function(w, t, lamM, lamR) {
     dtm.mm(w, t, lamM, lamR) + dtm.mr(w, t, lamM, lamR)
 }
@@ -142,6 +183,55 @@ dtr.r <- function(w, t, lamM, lamR) {
     dtr.rm(w, t, lamM, lamR) + dtr.rr(w, t, lamM, lamR)
 }
 
+#' Density for Time Spent in Moving or Resting
+#'
+#' Density for time spent in moving or resting in a time interval,
+#' unconditional or conditional on the initial state.
+#'
+#' @param w time points at which the density is to be evaluated
+#' @param t length of the time interval
+#' @param lamM rate parameter of the exponentially distributed duration in moving
+#' @param lamR rate parameter of the exponentially distributed duration in resting
+#' @param s0 initial state. If \code{NULL}, the unconditional density is
+#' returned; otherwise, it is one of "m" or "s", standing for moving and
+#' resting, respectively, and the conditional density is returned given
+#' the initial state.
+#' @return
+#' a vector of the density evaluated at \code{w}.
+#' @details
+#' \code{dtm} returns the density for time in moving;
+#' \code{dtr} returns the density for time in resting.
+#' @references
+#' Yan, J., Chen, Y., Lawrence-Apfel, K., Ortega, I. M., Pozdnyakoc, V.,
+#' Williams, S., and Meyer, T. (2014) A moving-resting process with an
+#' embedded Brownian motion for animal movements.
+#' Population Ecology. 56(2): 401--415.
+#'
+#' @examples
+#' lamM <- 1
+#' lamR <- c(1/2, 1, 2)
+#' lr <- length(lamR)
+#' totalT <- 10
+#' old.par <- par(no.readonly=TRUE)
+#' par(mfrow=c(1, 2), mar=c(2.5, 2.5, 1.1, 0.1), mgp=c(1.5, 0.5, 0), las=1)
+#' curve(dtm(x, totalT, 1, 1/2, "m"), 0, totalT, lty=1, ylim=c(0, 0.34),
+#'       xlab="M(10)", ylab="density")
+#' curve(dtm(x, totalT, 1, 1, "m"), 0, totalT, lty=2, add=TRUE)
+#' curve(dtm(x, totalT, 1, 2, "m"), 0, totalT, lty=3, add=TRUE)
+#' mtext(expression("S(0) = 1"))
+#' legend("topleft", legend = expression(lambda[r] == 1/2, lambda[r] == 1,
+#'        lambda[r] == 2), lty = 1:lr)
+#' curve(dtm(x, totalT, 1, 1/2, "r"), 0, totalT, lty=1, ylim=c(0, 0.34),
+#'       xlab="M(10)", ylab="density")
+#' curve(dtm(x, totalT, 1, 1, "r"), 0, totalT, lty=2, add=TRUE)
+#' curve(dtm(x, totalT, 1, 2, "r"), 0, totalT, lty=3, add=TRUE)
+#' mtext(expression("S(0) = 0"))
+#' legend("topleft", legend = expression(lambda[r] == 1/2, lambda[r] == 1,
+#'       lambda[r] == 2), lty = 1:lr)
+#' par(old.par)
+#'
+#' @export
+
 dtm <- function(w, t, lamM, lamR, s0 = NULL) {
     if (is.null(s0)) { ## unconditional
         pm <- lamR / (lamM + lamR)
@@ -154,6 +244,8 @@ dtm <- function(w, t, lamM, lamR, s0 = NULL) {
     }
 }
 
+#' @describeIn dtm Density of time spent in resting
+#' @export
 dtr <- function(w, t, lamM, lamR, s0 = NULL) {
     if (is.null(s0)) { ## unconditional
         pm <- lamR / (lamM + lamR)
@@ -298,7 +390,8 @@ cllk.m1 <- function(theta, data) {
     cllk.m1.p2v(dinc[,-1], dinc[,1], lamM, lamR, sigma)    
 }
 
-ncllk.m1.inc <- function(theta, data) { ## data is increment already
+ncllk.m1.inc <- function(theta, data, logtr = FALSE) { ## data is increment already
+    if (logtr) theta <- exp(theta)
     lamM <- theta[1]
     lamR <- theta[2]
     sigma <- theta[3]
@@ -306,16 +399,141 @@ ncllk.m1.inc <- function(theta, data) { ## data is increment already
 }
 
 
-fitMovRes <- function(data, start, method = "Nelder-Mead",
-                      optim.control = list()) {
+#' Fit a Moving-Resting Model with Embedded Brownian Motion
+#'
+#' Fit a Moving-Resting Model with Embedded Brownian Motion with animal
+#' movement data at discretely observation times by maximizing a composite
+#' likelihood constructed from the marginal density of increment.
+#'
+#' @param data a \code{data.frame} whose first column is the observation time,
+#' and other columns are location coordinates.
+#' @param start starting value of the model, a vector of three components
+#' in the order of rate for moving, rate for resting, and volatility.
+#' @param likelihood a character string specifying the likelihood type to
+#' maximize in estimation. This can be "full" for full likelihood or
+#' "composite' for composite likelihood.
+#' full loglikelihood from hidden Markov model approach.
+#' @param logtr logical, if TRUE parameters are estimated on the log scale.
+#' @param method the method argument to feed \code{optim}.
+#' @param optim.control a list of control to be passed to \code{optim}.
+#' @param integrControl a list of control parameters for the \code{integrate}
+#' function: rel.tol, abs.tol, subdivision.
+#' 
+#' @return
+#' a list of the following components:
+#' \item{estimate}{the esimated parameter vector}
+#' \item{loglik}{maximized loglikelihood or composite loglikelihood
+#' evaluated at the estimate}
+#' \item{convergence}{convergence code from \code{optim}}
+#' \item{likelihood}{likelihood type (full or composite) from the input}
+#' @references
+#' Yan, J., Chen, Y., Lawrence-Apfel, K., Ortega, I. M., Pozdnyakoc, V.,
+#' Williams, S., and Meyer, T. (2014) A moving-resting process with an
+#' embedded Brownian motion for animal movements.
+#' Population Ecology. 56(2): 401--415.
+#'
+#' @examples
+#' tgrid <- seq(0, 10, length=500)
+#' set.seed(123)
+#' ## make it irregularly spaced
+#' tgrid <- sort(sample(tgrid, 30)) # change to 400 for a larger sample
+#' dat <- rMovRes(tgrid, 1, 2, 25, "m")
+#'
+#' fit.fl <- fitMovRes(dat, start=c(2, 2, 20), likelihood = "full")
+#' fit.fl
+#' 
+#' fit.cl <- fitMovRes(dat, start=c(2, 2, 20), likelihood = "composite")
+#' fit.cl
+#' \dontrun{
+#' ## old, very slow, unexported R code
+#' fit.<- smam:::fitMovRes.cl(dat, start=c(2, 2, 2))
+#' fit.cpp
+#' }
+#' @export
+
+
+fitMovRes <- function(data, start, likelihood = c("full", "composite"),
+                      logtr = FALSE,
+                      method = "Nelder-Mead",
+                      optim.control = list(),
+                      integrControl = integr.control()) {
+    if (!is.matrix(data)) data <- as.matrix(data)
     dinc <- apply(data, 2, diff)
-    fit <- optim(start, ncllk.m1.inc, data = dinc,
-                 method = method,
-                 control = optim.control)
-    list(estimate = fit$par,
-         cloglik = -fit$value,
+    objfun <- switch(likelihood,
+                     composite = ncllk_m1_inc,
+                     full = nllk_inc,
+                     stop("Not valid likelihood type.")
+                     )
+    integrControl <- unlist(integrControl)
+    fit <- optim(start, objfun, data = dinc, method = method,
+                 control = optim.control, 
+                 integrControl = integrControl, 
+                 logtr = logtr)
+    ## get variance estimate
+    varest <- matrix(NA_real_, 3, 3)
+    estimate <- if (logtr) exp(fit$par) else fit$par
+    if (likelihood == "full") {
+        ## always do this without log transformation
+        hess <- tryCatch(numDeriv::hessian(
+            objfun, estimate, data = dinc,
+            integrControl = integrControl, logtr = FALSE),
+                         error = function(e) e)
+        if (!is(hess, "error")) varest <- solve(hess)
+        ## not -hess because objfun is negative llk already
+    }
+    
+    list(estimate    = estimate,
+         varest      = varest,
+         loglik      = -fit$value,
+         convergence = fit$convergence,
+         likelihood  = likelihood)
+}
+
+#' Auxiliary for Controlling Numerical Integration
+#'
+#' Auxiliary function for the numerical integration used in the
+#' likelihood and composite likelihood functions. Typically only
+#' used internally by 'fitMovRes'. 
+#'
+#' @param rel.tol relative accuracy requested.
+#' @param abs.tol absolute accuracy requested.
+#' @param subdivisions the maximum number of subintervals.
+#'
+#' @details
+#' The arguments are the same as \code{integrate}, but passed
+#' down to the C API of Rdqags used by \code{integrate}.
+#'
+#' @return
+#' A list with components named as the arguments.
+#'
+#' @export
+
+integr.control <- function(rel.tol = .Machine$double.eps^.25,
+                           abs.tol = rel.tol, subdivisions = 100L) {
+    if (!is.numeric(rel.tol) || rel.tol <= 0) 
+        stop("value of 'rel.tol' must be > 0")
+    if (!is.numeric(abs.tol) || abs.tol <= 0) 
+        stop("value of 'abs.tol' must be > 0")
+    if (!is.numeric(subdivisions) || subdivisions <= 0) 
+        stop("maximum number of subintervals must be > 0")
+    list(rel.tol = rel.tol, abs.tol = abs.tol, subdivisions = subdivisions)
+}
+    
+
+
+## The R version of composite likelihood estimation
+## Kept only for comparison check with fitMovRes using cl = TRUE
+fitMovRes.cl <- function(data, start, logtr = FALSE, method = "Nelder-Mead",
+                         optim.control = list()) {
+    if (!is.matrix(data)) data <- as.matrix(data)
+    dinc <- apply(data, 2, diff)
+    fit <- optim(start, ncllk.m1.inc, data = dinc, method = method,
+                 control = optim.control, logtr = logtr)
+    list(estimate    = fit$par,
+         loglik      = -fit$value,
          convergence = fit$convergence)
 }
+
 
 ## dx <- function(x, t, lamM, lamR, Sigma) {
 ##     pm <- 1 / lamM / (1 / lamM + 1 / lamR)
@@ -526,19 +744,3 @@ fitMovRes <- function(data, start, method = "Nelder-Mead",
 
 ##   bd
 ## }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
