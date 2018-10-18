@@ -38,6 +38,7 @@ unconditional or conditional on the initial state.
 \itemize{
 \item \code{dtr}: Density of time spent in resting
 }}
+
 \examples{
 lamM <- 1
 lamR <- c(1/2, 1, 2)
@@ -63,9 +64,8 @@ par(old.par)
 
 }
 \references{
-Yan, J., Chen, Y., Lawrence-Apfel, K., Ortega, I. M., Pozdnyakoc, V.,
+Yan, J., Chen, Y., Lawrence-Apfel, K., Ortega, I. M., Pozdnyakov, V.,
 Williams, S., and Meyer, T. (2014) A moving-resting process with an
 embedded Brownian motion for animal movements.
 Population Ecology. 56(2): 401--415.
 }
-

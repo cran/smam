@@ -6,24 +6,27 @@
 
 ## simulation of breaking time points bbs
 ## for a 2 state telegraph process
-sim1.times.bbz <- function(s, lam1, lam2) {
+sim1mr.times.bbz <- function(s, lam1, lam2) {
     tsum <- 0
     tt <- NULL
+    state <- NULL
     while (TRUE) {
         tnew <- rexp(1, lam1) ## starting from state 1
         tsum <- tsum + tnew
         tt <- c(tt, tsum)
+        state <- c(state, 0)
         if (tsum > s) break
         tnew <- rexp(1, lam2)
         tsum <- tsum + tnew
         tt <- c(tt, tsum)
+        state <- c(state, 1)
         if (tsum > s) break
     }
-    tt
+    cbind(tt, state)
 }
 
 ## simulation of a realization given breaking times 
-sim1.bbz <- function(s, sigma, time, brtimes, t0moving=TRUE) {
+sim1mr.bbz <- function(s, sigma, time, brtimes, t0moving=TRUE) {
 #### time: time points in [0, s]
     tt <- sort(unique(c(time, brtimes)))
     nt <- length(tt)
@@ -49,13 +52,44 @@ sim1.bbz <- function(s, sigma, time, brtimes, t0moving=TRUE) {
     x[tt %in% time]
 }
 
+## figure out the state given breaking times
+simmr.state <- function(time, brtimes, t0moving) {
+    brstate <- brtimes[, 2]
+    brtimes <- brtimes[, 1]
+    tt <- sort(unique(c(time, brtimes)))
+    nt <- length(tt)
+    nb <- length(brtimes) 
+    x <- rep(NA, nt)
+    tend <- brtimes[1]
+    tend.state <- brstate[1]
+    j <- 1
+    for (i in 1:nt) {
+        if (tt[i] <= tend) { ## status unchanged
+            x[i] <- tend.state
+        }
+        if (tt[i] == tend) { ## switch status
+            j <- j + 1
+            tend <- brtimes[j]
+            tend.state <- brstate[j]
+        }
+    }
+    
+    ## return result according to the start state
+    if (t0moving) {
+        return(1 - x[tt %in% time])
+    } else {
+        return(x[tt %in% time])
+    }
+}
+
+
 ## simulation a moving-resting path given a grid time
 
 #' Sampling from a Moving-Resting Process with Embedded Brownian Motion
 #'
 #' A moving-resting process consists of two states: moving and resting.
 #' The transition between the two states is modeled by an alternating
-#' renewal process, with expenentially distributed duration. An animal
+#' renewal process, with exponentially distributed duration. An animal
 #' stays at the same location while resting, and moves according to a
 #' Brownian motion while moving.
 #'
@@ -66,33 +100,70 @@ sim1.bbz <- function(s, sigma, time, brtimes, t0moving=TRUE) {
 #' @param s0 the state at time 0, must be one of "m" or "r", for moving and
 #' resting, respectively
 #' @param dim (integer) dimension of the Brownian motion
+#' @param state indicates whether the simulation show the states at given
+#' time points.
 #'
 #' @return
 #' A \code{data.frame} whose first column is the time points and whose
 #' other columns are coordinates of the locations.
 #' @references
-#' Yan, J., Chen, Y., Lawrence-Apfel, K., Ortega, I. M., Pozdnyakoc, V.,
+#' Yan, J., Chen, Y., Lawrence-Apfel, K., Ortega, I. M., Pozdnyakov, V.,
 #' Williams, S., and Meyer, T. (2014) A moving-resting process with an
 #' embedded Brownian motion for animal movements.
 #' Population Ecology. 56(2): 401--415.
+#'
+#' Pozdnyakov, V., Elbroch, L., Labarga, A., Meyer, T., and Yan, J.
+#' (2017) Discretely observed Brownian motion governed by telegraph
+#' process: estimation. Methodology and Computing in Applied Probability.
+#' doi:10.1007/s11009-017-9547-6.
+#' 
 #' @examples
 #' tgrid <- seq(0, 10, length=1001)
 #' ## make it irregularly spaced
 #' tgrid <- sort(sample(tgrid, 800))
-#' dat <- rMovRes(tgrid, 1, 1, 1, "m")
+#' dat <- rMR(tgrid, 1, 1, 1, "m")
 #' plot(dat[,1], dat[,2], xlab="t", ylab="X(t)", type='l')
+#'
+#' dat2 <- rMR(tgrid, 1, 1, 1, "m", state = TRUE)
+#' head(dat2)
 #' 
 #' @export
 
-rMovRes <- function(time, lamM, lamR, sigma, s0, dim = 2) {
+rMR <- function(time, lamM, lamR, sigma, s0, dim = 2, state = FALSE) {
     stopifnot(s0 %in% c("m", "r"))
     t0moving <- (s0 == "m")
     lam1 <- if (t0moving) lamM else lamR
     lam2 <- if (t0moving) lamR else lamM
+    
+    timeIND <- 0
+    if (length(time) == 1) {
+        timeIND <- 1
+        time <- c(0, time)
+    }
     tmax <- time[length(time)]
-    brtimes <- sim1.times.bbz(tmax, lam1, lam2)
-    coord <- replicate(dim, sim1.bbz(tmax, sigma, time, brtimes, t0moving))
+    brtimes <- sim1mr.times.bbz(tmax, lam1, lam2)
+    coord <- replicate(dim, sim1mr.bbz(tmax, sigma, time, brtimes[, 1], t0moving))
+
+    stateresult <- simmr.state(time, brtimes, t0moving = t0moving)
+
+    if (timeIND == 1) {
+        if (state) {
+            return(data.frame(time = time, state = stateresult, coord)[-1, ])
+        }
+        return(data.frame(time = time, coord)[-1, ])
+    }
+    if (state) {
+        return(data.frame(time = time, state = stateresult, coord))
+    }
     data.frame(time = time, coord)
+}
+
+#' 'rMovRes' is deprecated. Using new function 'rMR' instead.
+#' @rdname rMR
+#' @export
+rMovRes <- function(time, lamM, lamR, sigma, s0, dim = 2) {
+    .Deprecated("rMR")
+    rMR(time, lamM, lamR, sigma, s0, dim)
 }
 
 
@@ -202,7 +273,7 @@ dtr.r <- function(w, t, lamM, lamR) {
 #' \code{dtm} returns the density for time in moving;
 #' \code{dtr} returns the density for time in resting.
 #' @references
-#' Yan, J., Chen, Y., Lawrence-Apfel, K., Ortega, I. M., Pozdnyakoc, V.,
+#' Yan, J., Chen, Y., Lawrence-Apfel, K., Ortega, I. M., Pozdnyakov, V.,
 #' Williams, S., and Meyer, T. (2014) A moving-resting process with an
 #' embedded Brownian motion for animal movements.
 #' Population Ecology. 56(2): 401--415.
@@ -404,20 +475,30 @@ ncllk.m1.inc <- function(theta, data, logtr = FALSE) { ## data is increment alre
 #' Fit a Moving-Resting Model with Embedded Brownian Motion with animal
 #' movement data at discretely observation times by maximizing a composite
 #' likelihood constructed from the marginal density of increment.
+#' Using \code{segment} to fit part of observations to the model. A practical
+#' application of this feature is seasonal analysis.
 #'
-#' @param data a \code{data.frame} whose first column is the observation time,
-#' and other columns are location coordinates.
+#' @param data a data.frame whose first column is the observation time, and other
+#'     columns are location coordinates. If \code{segment} is not \code{NULL},
+#'     additional column with the same name given by \code{segment} should be
+#'     included. This additional column is used to indicate which part of
+#'     observations shoule be used to fit model. The value of this column can
+#'     be any integer with 0 means discarding this observation and non-0 means
+#'     using this obversvation. Using different non-zero numbers indicate different
+#'     segments. (See vignette for more details.)
 #' @param start starting value of the model, a vector of three components
-#' in the order of rate for moving, rate for resting, and volatility.
+#'     in the order of rate for moving, rate for resting, and volatility.
+#' @param segment character variable, name of the column which indicates segments,
+#'     in the given \code{data.frame}. The default value, \code{NULL}, means using
+#'     whole dataset to fit the model.
 #' @param likelihood a character string specifying the likelihood type to
-#' maximize in estimation. This can be "full" for full likelihood or
-#' "composite' for composite likelihood.
-#' full loglikelihood from hidden Markov model approach.
+#'     maximize in estimation. This can be "full" for full likelihood or
+#'     "composite' for composite likelihood.
 #' @param logtr logical, if TRUE parameters are estimated on the log scale.
 #' @param method the method argument to feed \code{optim}.
 #' @param optim.control a list of control to be passed to \code{optim}.
 #' @param integrControl a list of control parameters for the \code{integrate}
-#' function: rel.tol, abs.tol, subdivision.
+#'     function: rel.tol, abs.tol, subdivision.
 #' 
 #' @return
 #' a list of the following components:
@@ -427,73 +508,114 @@ ncllk.m1.inc <- function(theta, data, logtr = FALSE) { ## data is increment alre
 #' \item{convergence}{convergence code from \code{optim}}
 #' \item{likelihood}{likelihood type (full or composite) from the input}
 #' @references
-#' Yan, J., Chen, Y., Lawrence-Apfel, K., Ortega, I. M., Pozdnyakoc, V.,
+#' Yan, J., Chen, Y., Lawrence-Apfel, K., Ortega, I. M., Pozdnyakov, V.,
 #' Williams, S., and Meyer, T. (2014) A moving-resting process with an
 #' embedded Brownian motion for animal movements.
 #' Population Ecology. 56(2): 401--415.
 #'
+#' Pozdnyakov, V., Elbroch, L., Labarga, A., Meyer, T., and Yan, J.
+#' (2017) Discretely observed Brownian motion governed by telegraph
+#' process: estimation. Methodology and Computing in Applied Probability.
+#' doi:10.1007/s11009-017-9547-6.
+#'
 #' @examples
+#' \donttest{
 #' tgrid <- seq(0, 10, length=500)
 #' set.seed(123)
 #' ## make it irregularly spaced
 #' tgrid <- sort(sample(tgrid, 30)) # change to 400 for a larger sample
-#' dat <- rMovRes(tgrid, 1, 2, 25, "m")
+#' dat <- rMR(tgrid, 1, 2, 25, "m")
 #'
-#' fit.fl <- fitMovRes(dat, start=c(2, 2, 20), likelihood = "full")
+#' ## fit whole dataset to the MR model
+#' fit.fl <- fitMR(dat, start=c(2, 2, 20), likelihood = "full")
 #' fit.fl
 #' 
-#' fit.cl <- fitMovRes(dat, start=c(2, 2, 20), likelihood = "composite")
+#' fit.cl <- fitMR(dat, start=c(2, 2, 20), likelihood = "composite")
 #' fit.cl
-#' \dontrun{
-#' ## old, very slow, unexported R code
-#' fit.<- smam:::fitMovRes.cl(dat, start=c(2, 2, 2))
-#' fit.cpp
+#'
+#' ## fit part of dataset to the MR model
+#' batch <- c(rep(0, 5), rep(1, 7), rep(0, 4), rep(2, 10), rep(0, 4))
+#' dat.segment <- cbind(dat, batch)
+#' fit.segment <- fitMR(dat.segment, start = c(2, 2, 20), segment = "batch",
+#'                      likelihood = "full")
+#' head(dat.segment)
+#' fit.segment
 #' }
+#' 
 #' @export
+fitMR <- function(data, start, segment = NULL,
+                  likelihood = c("full", "composite"),
+                  logtr = FALSE,
+                  method = "Nelder-Mead",
+                  optim.control = list(),
+                  integrControl = integr.control()) {
+    if (is.null(segment)) {
 
+        
+        ## normal process
+        if (!is.matrix(data)) data <- as.matrix(data)
+        dinc <- apply(data, 2, diff)
+        objfun <- switch(likelihood,
+                         composite = ncllk_m1_inc,
+                         full = nllk_inc,
+                         stop("Not valid likelihood type.")
+                         )
+        integrControl <- unlist(integrControl)
+        fit <- optim(start, objfun, data = dinc, method = method,
+                     control = optim.control, 
+                     integrControl = integrControl, 
+                     logtr = logtr)
+        ## get variance estimate
+        varest <- matrix(NA_real_, 3, 3)
+        estimate <- if (logtr) exp(fit$par) else fit$par
+        if (likelihood == "full") {
+            ## always do this without log transformation
+            hess <- tryCatch(numDeriv::hessian(
+                                           objfun, estimate, data = dinc,
+                                           integrControl = integrControl, logtr = FALSE),
+                             error = function(e) e)
+            if (!is(hess, "error")) varest <- solve(hess)
+            ## not -hess because objfun is negative llk already
+        }
+        
+        return(list(estimate    = estimate,
+                    varest      = varest,
+                    loglik      = -fit$value,
+                    convergence = fit$convergence,
+                    likelihood  = likelihood))
 
+        
+    } else {
+
+        
+        ## seasonal process
+        result <- fitMR_seasonal(data, segment, start, likelihood,
+                                 logtr, method, optim.control, integrControl)
+        return(result)
+
+        
+    }
+}
+
+#' 'fitMovRes' is deprecated. Using new function 'fitMR' instead.
+#' @rdname fitMR
+#' @export
 fitMovRes <- function(data, start, likelihood = c("full", "composite"),
                       logtr = FALSE,
                       method = "Nelder-Mead",
                       optim.control = list(),
                       integrControl = integr.control()) {
-    if (!is.matrix(data)) data <- as.matrix(data)
-    dinc <- apply(data, 2, diff)
-    objfun <- switch(likelihood,
-                     composite = ncllk_m1_inc,
-                     full = nllk_inc,
-                     stop("Not valid likelihood type.")
-                     )
-    integrControl <- unlist(integrControl)
-    fit <- optim(start, objfun, data = dinc, method = method,
-                 control = optim.control, 
-                 integrControl = integrControl, 
-                 logtr = logtr)
-    ## get variance estimate
-    varest <- matrix(NA_real_, 3, 3)
-    estimate <- if (logtr) exp(fit$par) else fit$par
-    if (likelihood == "full") {
-        ## always do this without log transformation
-        hess <- tryCatch(numDeriv::hessian(
-            objfun, estimate, data = dinc,
-            integrControl = integrControl, logtr = FALSE),
-                         error = function(e) e)
-        if (!is(hess, "error")) varest <- solve(hess)
-        ## not -hess because objfun is negative llk already
-    }
-    
-    list(estimate    = estimate,
-         varest      = varest,
-         loglik      = -fit$value,
-         convergence = fit$convergence,
-         likelihood  = likelihood)
+    .Deprecated("fitMR")
+    fitMR(data= data, start = start, likelihood = likelihood,
+          logtr = logtr, method = method, optim.control = optim.control,
+          integrControl = integrControl)
 }
 
 #' Auxiliary for Controlling Numerical Integration
 #'
 #' Auxiliary function for the numerical integration used in the
 #' likelihood and composite likelihood functions. Typically only
-#' used internally by 'fitMovRes'. 
+#' used internally by 'fitMR' and 'fitMRH'. 
 #'
 #' @param rel.tol relative accuracy requested.
 #' @param abs.tol absolute accuracy requested.
@@ -522,7 +644,7 @@ integr.control <- function(rel.tol = .Machine$double.eps^.25,
 
 
 ## The R version of composite likelihood estimation
-## Kept only for comparison check with fitMovRes using cl = TRUE
+## Kept only for comparison check with fitMR using cl = TRUE
 fitMovRes.cl <- function(data, start, logtr = FALSE, method = "Nelder-Mead",
                          optim.control = list()) {
     if (!is.matrix(data)) data <- as.matrix(data)
@@ -547,6 +669,10 @@ fitMovRes.cl <- function(data, start, logtr = FALSE, method = "Nelder-Mead",
 ##     Sigma <- diag(rep(theta[3], 2))
 ##     sum(log(dx(xinc, t, theta[1], theta[2], Sigma)))
 ## }
+
+
+
+
 
 
 ## #################################################################

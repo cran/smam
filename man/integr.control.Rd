@@ -20,10 +20,9 @@ A list with components named as the arguments.
 \description{
 Auxiliary function for the numerical integration used in the
 likelihood and composite likelihood functions. Typically only
-used internally by 'fitMovRes'.
+used internally by 'fitMR' and 'fitMRH'.
 }
 \details{
 The arguments are the same as \code{integrate}, but passed
 down to the C API of Rdqags used by \code{integrate}.
 }
-
