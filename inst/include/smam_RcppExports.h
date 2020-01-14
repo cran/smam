@@ -25,6 +25,510 @@ namespace smam {
         }
     }
 
+    inline double norm_mrme(double z, double b, double d, NumericVector integrControl) {
+        typedef SEXP(*Ptr_norm_mrme)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_norm_mrme p_norm_mrme = NULL;
+        if (p_norm_mrme == NULL) {
+            validateSignature("double(*norm_mrme)(double,double,double,NumericVector)");
+            p_norm_mrme = (Ptr_norm_mrme)R_GetCCallable("smam", "_smam_norm_mrme");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_norm_mrme(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(b)), Shield<SEXP>(Rcpp::wrap(d)), Shield<SEXP>(Rcpp::wrap(integrControl)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline NumericVector g10_mrme(NumericMatrix z, NumericVector t, NumericVector theta, NumericVector integrControl) {
+        typedef SEXP(*Ptr_g10_mrme)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_g10_mrme p_g10_mrme = NULL;
+        if (p_g10_mrme == NULL) {
+            validateSignature("NumericVector(*g10_mrme)(NumericMatrix,NumericVector,NumericVector,NumericVector)");
+            p_g10_mrme = (Ptr_g10_mrme)R_GetCCallable("smam", "_smam_g10_mrme");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_g10_mrme(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<NumericVector >(rcpp_result_gen);
+    }
+
+    inline NumericVector g01_mrme(NumericMatrix z, NumericVector t, NumericVector theta, NumericVector integrControl) {
+        typedef SEXP(*Ptr_g01_mrme)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_g01_mrme p_g01_mrme = NULL;
+        if (p_g01_mrme == NULL) {
+            validateSignature("NumericVector(*g01_mrme)(NumericMatrix,NumericVector,NumericVector,NumericVector)");
+            p_g01_mrme = (Ptr_g01_mrme)R_GetCCallable("smam", "_smam_g01_mrme");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_g01_mrme(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<NumericVector >(rcpp_result_gen);
+    }
+
+    inline NumericVector g00_mrme(NumericMatrix z, NumericVector t, NumericVector theta, NumericVector integrControl) {
+        typedef SEXP(*Ptr_g00_mrme)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_g00_mrme p_g00_mrme = NULL;
+        if (p_g00_mrme == NULL) {
+            validateSignature("NumericVector(*g00_mrme)(NumericMatrix,NumericVector,NumericVector,NumericVector)");
+            p_g00_mrme = (Ptr_g00_mrme)R_GetCCallable("smam", "_smam_g00_mrme");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_g00_mrme(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<NumericVector >(rcpp_result_gen);
+    }
+
+    inline NumericVector g11_mrme(NumericMatrix z, NumericVector t, NumericVector theta, NumericVector integrControl) {
+        typedef SEXP(*Ptr_g11_mrme)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_g11_mrme p_g11_mrme = NULL;
+        if (p_g11_mrme == NULL) {
+            validateSignature("NumericVector(*g11_mrme)(NumericMatrix,NumericVector,NumericVector,NumericVector)");
+            p_g11_mrme = (Ptr_g11_mrme)R_GetCCallable("smam", "_smam_g11_mrme");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_g11_mrme(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<NumericVector >(rcpp_result_gen);
+    }
+
+    inline NumericVector t11_mrme(NumericVector t, NumericVector theta) {
+        typedef SEXP(*Ptr_t11_mrme)(SEXP,SEXP);
+        static Ptr_t11_mrme p_t11_mrme = NULL;
+        if (p_t11_mrme == NULL) {
+            validateSignature("NumericVector(*t11_mrme)(NumericVector,NumericVector)");
+            p_t11_mrme = (Ptr_t11_mrme)R_GetCCallable("smam", "_smam_t11_mrme");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_t11_mrme(Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<NumericVector >(rcpp_result_gen);
+    }
+
+    inline NumericVector t00_mrme(NumericVector t, NumericVector theta) {
+        typedef SEXP(*Ptr_t00_mrme)(SEXP,SEXP);
+        static Ptr_t00_mrme p_t00_mrme = NULL;
+        if (p_t00_mrme == NULL) {
+            validateSignature("NumericVector(*t00_mrme)(NumericVector,NumericVector)");
+            p_t00_mrme = (Ptr_t00_mrme)R_GetCCallable("smam", "_smam_t00_mrme");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_t00_mrme(Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<NumericVector >(rcpp_result_gen);
+    }
+
+    inline NumericVector t10_mrme(NumericVector t, NumericVector theta) {
+        typedef SEXP(*Ptr_t10_mrme)(SEXP,SEXP);
+        static Ptr_t10_mrme p_t10_mrme = NULL;
+        if (p_t10_mrme == NULL) {
+            validateSignature("NumericVector(*t10_mrme)(NumericVector,NumericVector)");
+            p_t10_mrme = (Ptr_t10_mrme)R_GetCCallable("smam", "_smam_t10_mrme");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_t10_mrme(Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<NumericVector >(rcpp_result_gen);
+    }
+
+    inline NumericVector t01_mrme(NumericVector t, NumericVector theta) {
+        typedef SEXP(*Ptr_t01_mrme)(SEXP,SEXP);
+        static Ptr_t01_mrme p_t01_mrme = NULL;
+        if (p_t01_mrme == NULL) {
+            validateSignature("NumericVector(*t01_mrme)(NumericVector,NumericVector)");
+            p_t01_mrme = (Ptr_t01_mrme)R_GetCCallable("smam", "_smam_t01_mrme");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_t01_mrme(Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<NumericVector >(rcpp_result_gen);
+    }
+
+    inline double nllk_mrme(NumericVector& theta, NumericMatrix& data, NumericVector& integrControl) {
+        typedef SEXP(*Ptr_nllk_mrme)(SEXP,SEXP,SEXP);
+        static Ptr_nllk_mrme p_nllk_mrme = NULL;
+        if (p_nllk_mrme == NULL) {
+            validateSignature("double(*nllk_mrme)(NumericVector&,NumericMatrix&,NumericVector&)");
+            p_nllk_mrme = (Ptr_nllk_mrme)R_GetCCallable("smam", "_smam_nllk_mrme");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_nllk_mrme(Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(integrControl)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double nllk_mrme_naive_cmp(NumericVector& theta, NumericMatrix& data, NumericVector& integrControl) {
+        typedef SEXP(*Ptr_nllk_mrme_naive_cmp)(SEXP,SEXP,SEXP);
+        static Ptr_nllk_mrme_naive_cmp p_nllk_mrme_naive_cmp = NULL;
+        if (p_nllk_mrme_naive_cmp == NULL) {
+            validateSignature("double(*nllk_mrme_naive_cmp)(NumericVector&,NumericMatrix&,NumericVector&)");
+            p_nllk_mrme_naive_cmp = (Ptr_nllk_mrme_naive_cmp)R_GetCCallable("smam", "_smam_nllk_mrme_naive_cmp");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_nllk_mrme_naive_cmp(Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(integrControl)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double nllk_mrme_fixed_sig_err(NumericVector& theta, double sig_err, NumericMatrix& data, NumericVector& integrControl) {
+        typedef SEXP(*Ptr_nllk_mrme_fixed_sig_err)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_nllk_mrme_fixed_sig_err p_nllk_mrme_fixed_sig_err = NULL;
+        if (p_nllk_mrme_fixed_sig_err == NULL) {
+            validateSignature("double(*nllk_mrme_fixed_sig_err)(NumericVector&,double,NumericMatrix&,NumericVector&)");
+            p_nllk_mrme_fixed_sig_err = (Ptr_nllk_mrme_fixed_sig_err)R_GetCCallable("smam", "_smam_nllk_mrme_fixed_sig_err");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_nllk_mrme_fixed_sig_err(Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(sig_err)), Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(integrControl)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double nllk_mrme_one_chain(NumericVector& theta, NumericMatrix& data, NumericVector& integrControl) {
+        typedef SEXP(*Ptr_nllk_mrme_one_chain)(SEXP,SEXP,SEXP);
+        static Ptr_nllk_mrme_one_chain p_nllk_mrme_one_chain = NULL;
+        if (p_nllk_mrme_one_chain == NULL) {
+            validateSignature("double(*nllk_mrme_one_chain)(NumericVector&,NumericMatrix&,NumericVector&)");
+            p_nllk_mrme_one_chain = (Ptr_nllk_mrme_one_chain)R_GetCCallable("smam", "_smam_nllk_mrme_one_chain");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_nllk_mrme_one_chain(Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(integrControl)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double nllk_mrme_one_chain_fixed_sig_err(NumericVector& theta, double sig_err, NumericMatrix& data, NumericVector& integrControl) {
+        typedef SEXP(*Ptr_nllk_mrme_one_chain_fixed_sig_err)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_nllk_mrme_one_chain_fixed_sig_err p_nllk_mrme_one_chain_fixed_sig_err = NULL;
+        if (p_nllk_mrme_one_chain_fixed_sig_err == NULL) {
+            validateSignature("double(*nllk_mrme_one_chain_fixed_sig_err)(NumericVector&,double,NumericMatrix&,NumericVector&)");
+            p_nllk_mrme_one_chain_fixed_sig_err = (Ptr_nllk_mrme_one_chain_fixed_sig_err)R_GetCCallable("smam", "_smam_nllk_mrme_one_chain_fixed_sig_err");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_nllk_mrme_one_chain_fixed_sig_err(Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(sig_err)), Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(integrControl)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double q10_mrme_approx(NumericVector z, double t, NumericVector theta, NumericVector integrControl, NumericVector err_start, NumericVector err_end, NumericVector err_end_prob) {
+        typedef SEXP(*Ptr_q10_mrme_approx)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_q10_mrme_approx p_q10_mrme_approx = NULL;
+        if (p_q10_mrme_approx == NULL) {
+            validateSignature("double(*q10_mrme_approx)(NumericVector,double,NumericVector,NumericVector,NumericVector,NumericVector,NumericVector)");
+            p_q10_mrme_approx = (Ptr_q10_mrme_approx)R_GetCCallable("smam", "_smam_q10_mrme_approx");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_q10_mrme_approx(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)), Shield<SEXP>(Rcpp::wrap(err_start)), Shield<SEXP>(Rcpp::wrap(err_end)), Shield<SEXP>(Rcpp::wrap(err_end_prob)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double q01_mrme_approx(NumericVector z, double t, NumericVector theta, NumericVector integrControl, NumericVector err_start, NumericVector err_end, NumericVector err_end_prob) {
+        typedef SEXP(*Ptr_q01_mrme_approx)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_q01_mrme_approx p_q01_mrme_approx = NULL;
+        if (p_q01_mrme_approx == NULL) {
+            validateSignature("double(*q01_mrme_approx)(NumericVector,double,NumericVector,NumericVector,NumericVector,NumericVector,NumericVector)");
+            p_q01_mrme_approx = (Ptr_q01_mrme_approx)R_GetCCallable("smam", "_smam_q01_mrme_approx");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_q01_mrme_approx(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)), Shield<SEXP>(Rcpp::wrap(err_start)), Shield<SEXP>(Rcpp::wrap(err_end)), Shield<SEXP>(Rcpp::wrap(err_end_prob)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double q00_mrme_approx(NumericVector z, double t, NumericVector theta, NumericVector integrControl, NumericVector err_start, NumericVector err_end, NumericVector err_end_prob) {
+        typedef SEXP(*Ptr_q00_mrme_approx)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_q00_mrme_approx p_q00_mrme_approx = NULL;
+        if (p_q00_mrme_approx == NULL) {
+            validateSignature("double(*q00_mrme_approx)(NumericVector,double,NumericVector,NumericVector,NumericVector,NumericVector,NumericVector)");
+            p_q00_mrme_approx = (Ptr_q00_mrme_approx)R_GetCCallable("smam", "_smam_q00_mrme_approx");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_q00_mrme_approx(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)), Shield<SEXP>(Rcpp::wrap(err_start)), Shield<SEXP>(Rcpp::wrap(err_end)), Shield<SEXP>(Rcpp::wrap(err_end_prob)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double q11_mrme_approx(NumericVector z, double t, NumericVector theta, NumericVector integrControl, NumericVector err_start, NumericVector err_end, NumericVector err_end_prob) {
+        typedef SEXP(*Ptr_q11_mrme_approx)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_q11_mrme_approx p_q11_mrme_approx = NULL;
+        if (p_q11_mrme_approx == NULL) {
+            validateSignature("double(*q11_mrme_approx)(NumericVector,double,NumericVector,NumericVector,NumericVector,NumericVector,NumericVector)");
+            p_q11_mrme_approx = (Ptr_q11_mrme_approx)R_GetCCallable("smam", "_smam_q11_mrme_approx");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_q11_mrme_approx(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)), Shield<SEXP>(Rcpp::wrap(err_start)), Shield<SEXP>(Rcpp::wrap(err_end)), Shield<SEXP>(Rcpp::wrap(err_end_prob)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double nllk_mrme_approx(NumericVector& theta, NumericMatrix& data, NumericVector& integrControl, NumericMatrix& approx_norm_even, NumericMatrix& approx_norm_odd) {
+        typedef SEXP(*Ptr_nllk_mrme_approx)(SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_nllk_mrme_approx p_nllk_mrme_approx = NULL;
+        if (p_nllk_mrme_approx == NULL) {
+            validateSignature("double(*nllk_mrme_approx)(NumericVector&,NumericMatrix&,NumericVector&,NumericMatrix&,NumericMatrix&)");
+            p_nllk_mrme_approx = (Ptr_nllk_mrme_approx)R_GetCCallable("smam", "_smam_nllk_mrme_approx");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_nllk_mrme_approx(Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(integrControl)), Shield<SEXP>(Rcpp::wrap(approx_norm_even)), Shield<SEXP>(Rcpp::wrap(approx_norm_odd)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double q10_mrme_approx_1dim(double z, double t, NumericVector theta, NumericVector integrControl, double err_start, double err_end, double err_end_prob) {
+        typedef SEXP(*Ptr_q10_mrme_approx_1dim)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_q10_mrme_approx_1dim p_q10_mrme_approx_1dim = NULL;
+        if (p_q10_mrme_approx_1dim == NULL) {
+            validateSignature("double(*q10_mrme_approx_1dim)(double,double,NumericVector,NumericVector,double,double,double)");
+            p_q10_mrme_approx_1dim = (Ptr_q10_mrme_approx_1dim)R_GetCCallable("smam", "_smam_q10_mrme_approx_1dim");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_q10_mrme_approx_1dim(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)), Shield<SEXP>(Rcpp::wrap(err_start)), Shield<SEXP>(Rcpp::wrap(err_end)), Shield<SEXP>(Rcpp::wrap(err_end_prob)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double q01_mrme_approx_1dim(double z, double t, NumericVector theta, NumericVector integrControl, double err_start, double err_end, double err_end_prob) {
+        typedef SEXP(*Ptr_q01_mrme_approx_1dim)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_q01_mrme_approx_1dim p_q01_mrme_approx_1dim = NULL;
+        if (p_q01_mrme_approx_1dim == NULL) {
+            validateSignature("double(*q01_mrme_approx_1dim)(double,double,NumericVector,NumericVector,double,double,double)");
+            p_q01_mrme_approx_1dim = (Ptr_q01_mrme_approx_1dim)R_GetCCallable("smam", "_smam_q01_mrme_approx_1dim");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_q01_mrme_approx_1dim(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)), Shield<SEXP>(Rcpp::wrap(err_start)), Shield<SEXP>(Rcpp::wrap(err_end)), Shield<SEXP>(Rcpp::wrap(err_end_prob)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double q00_mrme_approx_1dim(double z, double t, NumericVector theta, NumericVector integrControl, double err_start, double err_end, double err_end_prob) {
+        typedef SEXP(*Ptr_q00_mrme_approx_1dim)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_q00_mrme_approx_1dim p_q00_mrme_approx_1dim = NULL;
+        if (p_q00_mrme_approx_1dim == NULL) {
+            validateSignature("double(*q00_mrme_approx_1dim)(double,double,NumericVector,NumericVector,double,double,double)");
+            p_q00_mrme_approx_1dim = (Ptr_q00_mrme_approx_1dim)R_GetCCallable("smam", "_smam_q00_mrme_approx_1dim");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_q00_mrme_approx_1dim(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)), Shield<SEXP>(Rcpp::wrap(err_start)), Shield<SEXP>(Rcpp::wrap(err_end)), Shield<SEXP>(Rcpp::wrap(err_end_prob)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double q11_mrme_approx_1dim(double z, double t, NumericVector theta, NumericVector integrControl, double err_start, double err_end, double err_end_prob) {
+        typedef SEXP(*Ptr_q11_mrme_approx_1dim)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_q11_mrme_approx_1dim p_q11_mrme_approx_1dim = NULL;
+        if (p_q11_mrme_approx_1dim == NULL) {
+            validateSignature("double(*q11_mrme_approx_1dim)(double,double,NumericVector,NumericVector,double,double,double)");
+            p_q11_mrme_approx_1dim = (Ptr_q11_mrme_approx_1dim)R_GetCCallable("smam", "_smam_q11_mrme_approx_1dim");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_q11_mrme_approx_1dim(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(t)), Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(integrControl)), Shield<SEXP>(Rcpp::wrap(err_start)), Shield<SEXP>(Rcpp::wrap(err_end)), Shield<SEXP>(Rcpp::wrap(err_end_prob)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
+    inline double nllk_mrme_approx_1dim(NumericVector& theta, NumericMatrix& data, NumericVector& integrControl, NumericMatrix& approx_norm_even, NumericMatrix& approx_norm_odd) {
+        typedef SEXP(*Ptr_nllk_mrme_approx_1dim)(SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_nllk_mrme_approx_1dim p_nllk_mrme_approx_1dim = NULL;
+        if (p_nllk_mrme_approx_1dim == NULL) {
+            validateSignature("double(*nllk_mrme_approx_1dim)(NumericVector&,NumericMatrix&,NumericVector&,NumericMatrix&,NumericMatrix&)");
+            p_nllk_mrme_approx_1dim = (Ptr_nllk_mrme_approx_1dim)R_GetCCallable("smam", "_smam_nllk_mrme_approx_1dim");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_nllk_mrme_approx_1dim(Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(integrControl)), Shield<SEXP>(Rcpp::wrap(approx_norm_even)), Shield<SEXP>(Rcpp::wrap(approx_norm_odd)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
+    }
+
     inline NumericVector vp11(NumericVector vw, double t, double lambda1, double lambda0) {
         typedef SEXP(*Ptr_vp11)(SEXP,SEXP,SEXP,SEXP);
         static Ptr_vp11 p_vp11 = NULL;
@@ -296,6 +800,27 @@ namespace smam {
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<NumericMatrix >(rcpp_result_gen);
+    }
+
+    inline double mrllk_state(NumericVector& theta, NumericMatrix& data, IntegerVector& state, NumericVector& integrControl) {
+        typedef SEXP(*Ptr_mrllk_state)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_mrllk_state p_mrllk_state = NULL;
+        if (p_mrllk_state == NULL) {
+            validateSignature("double(*mrllk_state)(NumericVector&,NumericMatrix&,IntegerVector&,NumericVector&)");
+            p_mrllk_state = (Ptr_mrllk_state)R_GetCCallable("smam", "_smam_mrllk_state");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_mrllk_state(Shield<SEXP>(Rcpp::wrap(theta)), Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(state)), Shield<SEXP>(Rcpp::wrap(integrControl)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<double >(rcpp_result_gen);
     }
 
     inline NumericMatrix fwd_bwd_ths(NumericVector& theta, NumericMatrix& data, NumericVector& integrControl) {

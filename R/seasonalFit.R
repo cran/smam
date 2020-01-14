@@ -1,10 +1,14 @@
-## nllk_bmme_seasonal:     nllk for seasonal analysis with bmme process.
-## ncllk_m1_inc_seasonal:  composite nllk for seasonal analysis for MR model.
-## nllk_inc_seasonal:      full nllk for seasonal analysis for MR model.
-## nllk_seasonal_parallel: full nllk for seasonal analysis for MRH model.
-## fitBMME_seasonal:       fit bmme model for seasonal analysis.
-## fitMR_seasonal:         fit a moving-resting model for seasonal analysis.
-## fitMRH_seasonal:        fit a moving-resting-handling model for seasonal analysis.
+## nllk_bmme_seasonal:          nllk for seasonal analysis with bmme process.
+## ncllk_m1_inc_seasonal:       composite nllk for seasonal analysis for MR model.
+## nllk_inc_seasonal:           full nllk for seasonal analysis for MR model.
+## nllk_mrme_seasonal:          nllk for seasonal analysis for MRME model.
+## nllk_mrme_approx_seasonal:   nllk for seasonal analysis for MRME approx model.
+## nllk_seasonal_parallel:      full nllk for seasonal analysis for MRH model.
+## fitBMME_seasonal:            fit bmme model for seasonal analysis.
+## fitMR_seasonal:              fit a moving-resting model for seasonal analysis.
+## fitMRME_seasonal:            fit a moving-resting model with measurement error for seasonal analysis.
+## fitMRMEapprox_seasonal:      fit approximate moving-resting model with measurement error for seasonal analyis.
+## fitMRH_seasonal:             fit a moving-resting-handling model for seasonal analysis.
 
 
 
@@ -20,23 +24,69 @@
 ##       should be used for indicate segments.
 ## return: a list with each element is a segment.
 seg2list <- function(data, segment) {
-  if (segment %in% names(data) != TRUE) {
-    stop("Cannot find segment variable in data.frame.")
-  }
-  
-  seg.col <- which(names(data) == segment)
-  segs    <- unique(data[, seg.col])
-  segs    <- segs[-which(segs == 0)]
-  n.segs  <- length(segs)
-  
-  result  <- vector('list', n.segs)
-  
-  for (i in 1:n.segs) {
-    result[[i]] <- data[which(data[, seg.col] == segs[i]), ]
-  }
-  
-  result
+    if (segment %in% names(data) != TRUE) {
+        stop("Cannot find segment variable in data.frame.")
+    }
+
+    seg.ncol <- which(names(data) == segment)
+    seg.col <- data[, seg.ncol]
+    seg.col2 <- rep(0, length(seg.col))
+
+    j <- 0
+
+    if (seg.col[1] != 0) {
+        j <- j + 1
+        seg.col2 <- 1
+    }else{
+        seg.col2 <- 0
+    }
+    
+    for (i in 2:length(seg.col)) {
+        if (seg.col[i] == 0) {
+            seg.col2[i] <- 0
+        } else {
+            if(seg.col[i-1] != 0) {
+                seg.col2[i] <- j
+            } else {
+                j <- j + 1
+                seg.col2[i] <- j
+            }
+        }
+    }
+    
+    data <- cbind(data, seg.col2)
+    new.seg <- unique(seg.col2)
+    new.seg <- new.seg[-which(new.seg == 0)]
+
+    result <- vector('list', length(new.seg))
+
+    for (i in 1:length(new.seg)) {
+        result[[i]] <- data[which(seg.col2 == new.seg[i]), ]
+    }
+
+    lapply(result, function(x) x[, -ncol(data)])    
 }
+
+### old version seg2list, just for reference
+## seg2list <- function(data, segment) {
+##   if (segment %in% names(data) != TRUE) {
+##     stop("Cannot find segment variable in data.frame.")
+##   }
+  
+##   seg.col <- which(names(data) == segment)
+##   segs    <- unique(data[, seg.col])
+##   segs    <- segs[-which(segs == 0)]
+##   n.segs  <- length(segs)
+  
+##   result  <- vector('list', n.segs)
+  
+##   for (i in 1:n.segs) {
+##     result[[i]] <- data[which(data[, seg.col] == segs[i]), ]
+##   }
+  
+##   result
+## }
+
 
 
 ## delete the date column in the output of 'seasonFilter'.
@@ -49,9 +99,7 @@ prepareSeasonalFit <- function(data, segment) {
     lapply(data, function(x) apply(x, 2, diff))
 }
 
-####################################
-### BMME Model seasonal analysis ###
-####################################
+
 
 ## The negative log-likelihood of bmme for seasonal analysis data.
 ## input:
@@ -66,8 +114,7 @@ nllk_bmme_seasonal <- function(param, data) {
     sum(unlist(result))
 }
 
-## The composite and forward algorithm nllk of two-states model
-## for seasonal analysis data.
+## The nllk of moving-resting model for seasonal analysis data.
 ## input:
 ##        theta: vector of (lambda1, lambda0, sigma)
 ##        data:  list have the *similar* format as the output from
@@ -75,6 +122,8 @@ nllk_bmme_seasonal <- function(param, data) {
 ##        integrControl, logtr: see ncllk_m1_inc
 ## output:
 ##        negative log-likelihood of seasonal filtered data
+
+## composite nllk
 ncllk_m1_inc_seasonal <- function(theta, data,
                                   integrControl, logtr) {
     n.year <- length(data)
@@ -84,6 +133,7 @@ ncllk_m1_inc_seasonal <- function(theta, data,
     sum(unlist(result))
 }
 
+## forward nllk
 nllk_inc_seasonal <- function(theta, data,
                               integrControl, logtr) {
     n.year <- length(data)
@@ -92,6 +142,60 @@ nllk_inc_seasonal <- function(theta, data,
                      logtr = logtr)
     sum(unlist(result))
 }
+
+
+## The nllk of moving-resting model with measurement error
+## for seasonal analysis data.
+## input:
+##        theta: vector of (lambda1, lambda0, sigma, sig_err)
+##        data:  list have the *similar* format as the output from
+##               'seasonFilter' after 'prepareSeasonalFit'
+##        integrControl, logtr: see ncllk_m1_inc
+## output:
+##        negative log-likelihood of seasonal filtered data
+nllk_mrme_seasonal <- function(theta, data, integrControl) {
+    n.year <- length(data)
+    result <- lapply(data, nllk_mrme,
+                     theta = theta, integrControl = integrControl)
+    sum(unlist(result))
+}
+## naive composite llk for MRME
+nllk_mrme_naive_cmp_seasonal <- function(theta, data, integrControl) {
+    n.year <- length(data)
+    result <- lapply(data, nllk_mrme_naive_cmp,
+                     theta = theta, integrControl = integrControl)
+    sum(unlist(result))
+}
+
+
+## The nllk of moving-resting model with approximate measurement
+## error for seasonal analysis data.
+## input:
+##        theta: vector of (lambda1, lambda0, sigma, sig_err)
+##        data:  list have the *similar* format as the output from
+##               'seasonFilter' after 'prepareSeasonalFit'
+##        integrControl: see ncllk_m1_inc
+##        approx_norm_even, approx_norm_odd: see comment in MRME_approx.cpp
+## output:
+##        negative log-likelihood of seasonal filtered data
+nllk_mrme_approx_seasonal <- function(theta, data, integrControl,
+                                      approx_norm_even, approx_norm_odd) {
+    n.year <- length(data)
+    result <- lapply(data, nllk_mrme_approx,
+                     theta = theta, integrControl = integrControl,
+                     approx_norm_even = approx_norm_even, approx_norm_odd = approx_norm_odd)
+    sum(unlist(result))
+}
+
+
+
+
+
+
+
+####################################
+### BMME Model seasonal analysis ###
+####################################
 
 ## obtain initial value for sigma and delta by method of moment
 ## (the wrapper of 'bmme.start' for seasonal analysis data.)
@@ -174,7 +278,7 @@ movres.start.seasonal <- function(dat, segment) {
 
 
 
-## internal function for fitBMME seasonal
+## internal function for fitMR seasonal
 ##' @importFrom stats optim
 ##' @importFrom methods is
 fitMR_seasonal <- function(data, segment, start, likelihood,
@@ -211,6 +315,104 @@ fitMR_seasonal <- function(data, segment, start, likelihood,
          convergence = fit$convergence,
          likelihood  = likelihood)
 }
+
+
+#####################################################################
+### Moving-Resting with Measurement Error Model seasonal analysis ###
+#####################################################################
+## internal function for fitMR seasonal
+##' @importFrom stats optim
+##' @importFrom methods is
+fitMRME_seasonal <- function(data, segment, start,
+                             lower, upper,
+                             #method, optim.control,
+                             integrControl) {
+    data <- seg2list(data, segment)
+    if (is.null(start)) start <- movres.start.seasonal(data, segment)
+    dinc <- prepareSeasonalFit(data, segment)
+    integrControl <- unlist(integrControl)
+
+
+    fit <- nloptr::nloptr(x0 = start, eval_f = nllk_mrme_seasonal,
+                          data = dinc,
+                          integrControl = integrControl,
+                          lb = lower,
+                          ub = upper,
+                          opts = list("algorithm"   = "NLOPT_LN_COBYLA",
+                                      "print_level" = 3,
+                                      "maxeval" = -5))
+
+    result <- list(estimate    =  fit[[18]],
+                   loglik      = -fit[[17]],
+                   convergence =  fit[[14]])
+
+    return(result)
+    
+    ## fit <- optim(start, nllk_mrme_seasonal, data = dinc, method = method,
+    ##              control = optim.control, integrControl = integrControl)
+    
+    ## estimate <- fit$par
+    
+    ## list(estimate    = estimate,
+    ##      loglik      = -fit$value,
+    ##      convergence = fit$convergence)
+}
+
+
+fitMRME_naive_seasonal <- function(data, segment, start,
+                                   lower, upper,
+                                   #method, optim.control,
+                                   integrControl) {
+    data <- seg2list(data, segment)
+    if (is.null(start)) start <- movres.start.seasonal(data, segment)
+    dinc <- prepareSeasonalFit(data, segment)
+    integrControl <- unlist(integrControl)
+
+    fit <- nloptr::nloptr(x0 = start, eval_f = nllk_mrme_naive_cmp_seasonal,
+                          data = dinc,
+                          integrControl = integrControl,
+                          lb = lower,
+                          ub = upper,
+                          opts = list("algorithm"   = "NLOPT_LN_COBYLA",
+                                      "print_level" = 3,
+                                      "maxeval" = -5))
+
+    result <- list(estimate    =  fit[[18]],
+                   loglik      = -fit[[17]],
+                   convergence =  fit[[14]])
+
+    return(result)
+    
+    ## fit <- optim(start, nllk_mrme_naive_cmp_seasonal, data = dinc, method = method,
+    ##              control = optim.control, integrControl = integrControl)
+    
+    ## estimate <- fit$par
+    
+    ## list(estimate    = estimate,
+    ##      loglik      = -fit$value,
+    ##      convergence = fit$convergence)
+}
+
+
+fitMRMEapprox_seasonal <- function(data, segment, start,
+                                   approx_norm_even, approx_norm_odd,
+                                   method, optim.control, integrControl) {
+    data <- seg2list(data, segment)
+    if (is.null(start)) start <- movres.start.seasonal(data, segment)
+    dinc <- prepareSeasonalFit(data, segment)
+    integrControl <- unlist(integrControl)
+    
+    fit <- optim(start, nllk_mrme_approx_seasonal, data = dinc, method = method,
+                 control = optim.control, integrControl = integrControl,
+                 approx_norm_even = approx_norm_even, approx_norm_odd = approx_norm_odd)
+    
+    
+    list(estimate    = fit$par,
+         loglik      = -fit$value,
+         convergence = fit$convergence)
+}
+
+
 
 
 
@@ -277,11 +479,11 @@ fitMRH_seasonal <- function(data, segment, start,
                           ub = upper,
                           opts = list("algorithm"   = "NLOPT_LN_COBYLA",
                                       "print_level" = 3,
-                                      "maxeval" = 0))
+                                      "maxeval" = -5))
 
     result <- list(estimate    =  fit[[18]],
                    loglik      = -fit[[17]],
-                   convergence =  fit[[13]])
+                   convergence =  fit[[14]])
     result
 }
 

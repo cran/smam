@@ -1,3 +1,13 @@
+# CHANGES IN smam VERSION 0.5.0
+
+## MAJOR CHANGES
+
+* Added moving-resting model with measurement error is modeled as Gaussian noise as `fitMRME`.
+
+* Added estimator variance function for `fitMRME` as `estVarMRME_Godambe` and `estVarMRME_pBootstrap`.
+
+
+
 # CHANGES IN smam VERSION 0.4.0
 
 ## MAJOR CHANGES

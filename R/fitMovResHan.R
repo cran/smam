@@ -80,11 +80,24 @@ fitMRH <- function(data, start, segment = NULL,
                                   ub = upper,
                                   opts = list("algorithm"   = "NLOPT_LN_COBYLA",
                                               "print_level" = 3,
-                                              "maxeval" = 0))
+                                              "maxeval" = -5))
 
             result <- list(estimate    =  fit[[18]],
                            loglik      = -fit[[17]],
-                           convergence =  fit[[13]])
+                           convergence =  fit[[14]])
+
+            ## fit <- optim(par = start, fn = nllk_fwd_ths,
+            ##              data = dinc,
+            ##              integrControl = integrControl,
+            ##              method = "L-BFGS-B",
+            ##              lower  = lower,
+            ##              upper = upper,
+            ##              control = list(maxit =  1000))
+
+            ## result <- list(estimate = fit$par,
+            ##                loglik = -fit$value,
+            ##                convergence = fit$convergence)
+            
             return(result)
 
             
@@ -130,14 +143,67 @@ fitMRH_parallel <- function(data, start, lower, upper,
                           ub = upper,
                           opts = list("algorithm"   = "NLOPT_LN_COBYLA",
                                       "print_level" = 3,
-                                      "maxeval" = 0))
+                                      "maxeval" = -5))
 
     result <- list(estimate    =  fit[[18]],
                    loglik      = -fit[[17]],
-                   convergence =  fit[[13]])
+                   convergence =  fit[[14]])
+
+
+    ## fit <- optim(par = start, fn = nllk_fwd_ths_parallel,
+    ##              data = dinc,
+    ##              integrControl = integrControl,
+    ##              grainSize = grainSize,
+    ##              method = "L-BFGS-B",
+    ##              lower  = lower,
+    ##              upper = upper,
+    ##              control = list(maxit =  1000))
+
+    ## result <- list(estimate = fit$par,
+    ##                loglik = -fit$value,
+    ##                convergence = fit$convergence)
+    
     result
 }
 
+
+
+##### testing code for getting hessian matrix of nllk
+hessMRH <- function(estimate, data, integrControl, numThreads) {
+    if (!is.matrix(data)) data <- as.matrix(data)
+    dinc <- apply(data, 2, diff)
+    integrControl <- unlist(integrControl)
+    if (numThreads <= 1) {
+        hess <- tryCatch(numDeriv::hessian(nllk_fwd_ths,
+                                           x = estimate,
+                                           data = dinc,
+                                           integrControl = integrControl),
+                         error = function(e) {
+                             print(e)
+                             matrix(NA, ncol = 5, nrow = 5)
+                         })
+    } else {
+        grainSize <- ceiling(nrow(dinc) / numThreads)
+
+        ## allocate threads
+        RcppParallel::setThreadOptions(numThreads = numThreads)
+
+        hess <- tryCatch(numDeriv::hessian(nllk_fwd_ths_parallel,
+                                           x = estimate,
+                                           data = dinc,
+                                           integrControl = integrControl,
+                                           grainSize = grainSize),
+                         error = function(e) {
+                             print(e)
+                             matrix(NA, ncol = 5, nrow = 5)
+                         })
+    }
+    
+    hess
+}
+
+
+##### ending of testing code
 
 
 ##### do not export composite llk for MovResHan,

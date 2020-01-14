@@ -1,4 +1,4 @@
-#' @importFrom stats dnorm integrate optim rexp rnorm
+#' @importFrom stats dnorm integrate optim rexp rnorm cov
 #' @importFrom methods is
 #' @importFrom numDeriv hessian
 #' @importFrom Rcpp evalCpp
@@ -126,6 +126,10 @@ simmr.state <- function(time, brtimes, t0moving) {
 #'
 #' dat2 <- rMR(tgrid, 1, 1, 1, "m", state = TRUE)
 #' head(dat2)
+#'
+#' dat3 <- rMRME(tgrid, 1, 1, 1, 0.01, "m", state = TRUE)
+#' head(dat3)
+#' plot(dat3[,1], dat3[,3], xlab="t", ylab="Z(t)=X(t)+GWN(0.01)", type="l")
 #' 
 #' @export
 
@@ -164,6 +168,25 @@ rMR <- function(time, lamM, lamR, sigma, s0, dim = 2, state = FALSE) {
 rMovRes <- function(time, lamM, lamR, sigma, s0, dim = 2) {
     .Deprecated("rMR")
     rMR(time, lamM, lamR, sigma, s0, dim)
+}
+
+
+#' 'rMRME' samples from moving-resting process with Guassian measurement error
+#' @param sig_err s.d. of Gaussian white noise
+#' @rdname rMR
+#' @export
+rMRME <- function(time, lamM, lamR, sigma, sig_err, s0, dim = 2, state = FALSE){
+    dat <- rMR(time, lamM, lamR, sigma, s0, dim = 2, state)
+    if (state) {
+        for (i in 1:dim) {
+            dat[, i+2] <- dat[, i+2] + rnorm(length(time), mean = 0, sd = sig_err)
+        }
+    } else {
+        for (i in 1:dim) {
+            dat[, i+1] <- dat[, i+1] + rnorm(length(time), mean = 0, sd = sig_err)
+        }
+    }
+    dat
 }
 
 
@@ -611,6 +634,620 @@ fitMovRes <- function(data, start, likelihood = c("full", "composite"),
           integrControl = integrControl)
 }
 
+
+#' Fit a Moving-Resting Model with Measurement Error
+#'
+#' 'fitMRME' fits a Moving-Resting Model with Measurement Error. The measurement
+#' error is modeled by Guassian noise. Using \code{segment} to fit part
+#' of observations to the model. A practical application of this feature
+#' is seasonal analysis.
+#'
+#' @param data a data.frame whose first column is the observation time, and other
+#'     columns are location coordinates. If \code{segment} is not \code{NULL},
+#'     additional column with the same name given by \code{segment} should be
+#'     included. This additional column is used to indicate which part of
+#'     observations shoule be used to fit model. The value of this column can
+#'     be any integer with 0 means discarding this observation and non-0 means
+#'     using this obversvation. Using different non-zero numbers indicate different
+#'     segments. (See vignette for more details.)
+#' @param start starting value of the model, a vector of four components
+#'     in the order of rate for moving, rate for resting, volatility, and
+#'     s.d. of Guassian measurement error.
+#' @param segment character variable, name of the column which indicates segments,
+#'     in the given \code{data.frame}. The default value, \code{NULL}, means using
+#'     whole dataset to fit the model.
+#' @param lower,upper Lower and upper bound for optimization.
+#' @param method the method argument to feed \code{optim}.
+#' @param optim.control a list of control to be passed to \code{optim}.
+#' @param integrControl a list of control parameters for the \code{integrate}
+#'     function: rel.tol, abs.tol, subdivision.
+#' 
+#' @return
+#' a list of the following components:
+#' \item{estimate}{the esimated parameter vector}
+#' \item{loglik}{maximized loglikelihood or composite loglikelihood
+#' evaluated at the estimate}
+#' \item{convergence}{convergence code from \code{optim}}
+#' 
+#' @references
+#' Hu, C., Pozdnyakov, V., and Yan, J. Moving-resting model with measurement
+#' error. In process.
+#'
+#' @author Chaoran Hu
+#' 
+#' @examples
+#' \donttest{
+#' tgrid <- seq(0, 10*100, length=100)
+#' set.seed(123)
+#' dat <- rMRME(tgrid, 1, 0.5, 1, 0.01, "m")
+#'
+#' ## fit whole dataset to the MRME model
+#' fit <- fitMRME(dat, start=c(1, 0.5, 1, 0.01))
+#' fit
+#'
+#' ## fit whole dataset to the MRME model with naive composite likelihood
+#' fit.naive <- fitMRME_naive(dat, start=c(1, 0.5, 1, 0.01))
+#' fit.naive
+#'
+#' ## fit whole dataset to the MRME model with approximate error
+#' fit.approx <- fitMRMEapprox(dat, start=c(1, 0.5, 1, 0.01))
+#' fit.approx
+#'
+#' ## fit part of dataset to the MR model
+#' batch <- c(rep(0, 5), rep(1, 17), rep(0, 4), rep(2, 30), rep(0, 4), rep(3, 40))
+#' dat.segment <- cbind(dat, batch)
+#' fit.segment <- fitMRME(dat.segment, start = c(1, 0.5, 1, 0.01), segment = "batch")
+#' fit.segment.approx <- fitMRMEapprox(dat.segment, start = c(1, 0.5, 1, 0.01), segment = "batch")
+#' head(dat.segment)
+#' fit.segment
+#' }
+#' 
+#' @export
+fitMRME <- function(data, start, segment = NULL,
+                    lower = c(0.000001, 0.000001, 0.000001, 0.000001),
+                    upper = c(10, 10, 10, 10),
+                    #method = "Nelder-Mead",
+                    #optim.control = list(),
+                    integrControl = integr.control()) {
+    if (is.null(segment)) {
+
+        
+        if (!is.matrix(data)) data <- as.matrix(data)
+        dinc <- apply(data, 2, diff)
+        integrControl <- unlist(integrControl)
+
+        fit <- nloptr::nloptr(x0 = start, eval_f = nllk_mrme,
+                              data = dinc,
+                              integrControl = integrControl,
+                              lb = lower,
+                              ub = upper,
+                              opts = list("algorithm"   = "NLOPT_LN_COBYLA",
+                                          "print_level" = 3,
+                                          "maxeval" = -5))
+
+        result <- list(estimate    =  fit[[18]],
+                       loglik      = -fit[[17]],
+                       convergence =  fit[[14]])
+
+        return(result)
+
+        
+        ## fit <- optim(start, nllk_mrme, data = dinc, method = method,
+        ##              control = optim.control, integrControl = integrControl)
+
+        ## estimate <- fit$par
+        
+        ## return(list(estimate    = estimate,
+        ##             loglik      = -fit$value,
+        ##             convergence = fit$convergence))
+
+        
+    } else {
+
+        
+        ## seasonal process
+        result <- fitMRME_seasonal(data, segment, start,
+                                   lower, upper,
+                                   #method, optim.control,
+                                   integrControl)
+        return(result)
+
+        
+    }
+}
+
+#' Variance matrix of estimators from moving-resting process with measurement error
+#'
+#' 'estVarMRME_Godambe' uses Godambe information matrix to obtain variance matrix
+#' of estimators from 'fitMRME'.
+#'
+#' @param est_theta estimators of MRME model
+#' @param data data used to process estimation
+#' @param nBS number of bootstrap.
+#' @param numThreads the number of threads for parallel computation. If its value
+#' is greater than 1, then parallel computation will be processed. Otherwise,
+#' serial computation will be processed.
+#' @param integrControl a list of control parameters for the \code{integrate}
+#' function: rel.tol, abs.tol, subdivision.
+#' @param gradMethod method used for numeric gradient (\code{numDeriv::grad}).
+#'
+#' @return variance-covariance matrix of estimators
+#'
+#' @author Chaoran Hu
+#'
+#' @examples
+#' \donttest{
+#' tgrid <- seq(0, 10*100, length=100)
+#' set.seed(123)
+#' dat <- rMRME(tgrid, 1, 0.5, 1, 0.01, "m")
+#' estVarMRME_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10)
+#' estVarMRME_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+#' estVarMRME_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10)
+#' estVarMRME_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+#' estVarMRMEnaive_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10)
+#' estVarMRMEnaive_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10)
+#' }
+#'
+#' @export
+estVarMRME_Godambe <- function(est_theta, data, nBS,
+                               numThreads = 1,
+                               gradMethod = "simple",
+                               integrControl = integr.control()) {
+    
+    ## get J matrix in Godambe information matrix via bootstrap
+    getJ_MRME <- function(est_theta, data, nBS, numThreads, gradMethod, integrControl) {
+        
+        tgrid <- data[, 1]
+        dim <- ncol(data) - 1
+        
+        lamM <- est_theta[1]
+        lamR <- est_theta[2]
+        sigma <- est_theta[3]
+        sig_err <- est_theta[4]
+
+        p_m <- 1/lamM/(1/lamM + 1/lamR)
+        p_r <- 1 - p_m
+
+        integrControl <- unlist(integrControl)
+
+        if (numThreads <= 1) {
+            
+            result <- matrix(NA, ncol = 4, nrow = nBS)
+
+            for (i in seq_len(nBS)) {
+                start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
+                datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
+                datBS <- as.matrix(datBS)
+                dincBS <- apply(datBS, 2, diff)
+                grad_cart <- numDeriv::grad(func = nllk_mrme, x = est_theta,
+                                            method = gradMethod,
+                                            data = dincBS,
+                                            integrControl = integrControl)
+                result[i, ] <- -grad_cart
+            }
+            
+        } else {
+
+            ## create parallel backend
+            cl = parallel::makeCluster(numThreads)
+            on.exit(close(pb), add = TRUE)
+            on.exit(parallel::stopCluster(cl), add = TRUE)
+            #doParallel::registerDoParallel(cl)
+            doSNOW::registerDoSNOW(cl)
+            pb <- utils::txtProgressBar(max = nBS, style = 3)
+            progress <- function(n) utils::setTxtProgressBar(pb, n)
+            opts <- list(progress = progress)
+
+            i = 1 #Dummy line for Rstudio warnings
+
+            result <- foreach(i = 1:nBS, .combine = rbind, .options.snow = opts) %dopar% {
+                start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
+                datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
+                datBS <- as.matrix(datBS)
+                dincBS <- apply(datBS, 2, diff)
+                grad_cart <- numDeriv::grad(func = nllk_mrme, x = est_theta,
+                                            method = gradMethod,
+                                            data = dincBS,
+                                            integrControl = integrControl)
+                -grad_cart
+            }
+
+        }
+        
+        cov(result)
+    }
+
+    ## get H matrix in Godambe information matrix
+    getH_MRME <- function(est_theta, data, integrControl) {
+        data <- as.matrix(data)
+        dinc <- apply(data, 2, diff)
+        integrControl <- unlist(integrControl)
+
+        numDeriv::hessian(func = nllk_mrme, x = est_theta, data = dinc,
+                          integrControl = integrControl)
+    }
+
+    Jmatrix <- getJ_MRME(est_theta, data, nBS, numThreads, gradMethod, integrControl)
+    Hmatrix <- getH_MRME(est_theta, data, integrControl)
+
+    solve(Hmatrix %*% solve(Jmatrix) %*% Hmatrix)
+
+}
+
+#' 'estVarMRME_pBootstrap' uses parametric bootstrap to obtain variance matrix
+#' of estimators from 'fitMRME'
+#' @param detailBS whether or not output estimation results during bootstrap,
+#' which can be used to generate bootstrap CI.
+#' @rdname estVarMRME_Godambe
+#' @export
+estVarMRME_pBootstrap <- function(est_theta, data, nBS, detailBS = FALSE,
+                                  numThreads = 1,
+                                  integrControl = integr.control()) {
+
+    tgrid <- data[, 1]
+    dim <- ncol(data) - 1
+    
+    lamM <- est_theta[1]
+    lamR <- est_theta[2]
+    sigma <- est_theta[3]
+    sig_err <- est_theta[4]
+
+    p_m <- 1/lamM/(1/lamM + 1/lamR)
+    p_r <- 1 - p_m
+
+    if (numThreads <= 1) {
+        
+        result <- matrix(NA, ncol = 4, nrow = nBS)
+
+        for (i in seq_len(nBS)) {
+            start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
+            datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
+            result[i, ] <- fitMRME(datBS, start = est_theta,
+                                   integrControl = integrControl)$estimate
+        }
+
+    } else {
+
+        ## create parallel backend
+        cl = parallel::makeCluster(numThreads)
+        on.exit(close(pb), add = TRUE)
+        on.exit(parallel::stopCluster(cl), add = TRUE)
+        doSNOW::registerDoSNOW(cl)
+        pb <- utils::txtProgressBar(max = nBS, style = 3)
+        progress <- function(n) utils::setTxtProgressBar(pb, n)
+        opts <- list(progress = progress)
+
+        i = 1
+        result <- foreach(i = 1:nBS, .combine = rbind, .options.snow = opts) %dopar% {
+            start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
+            datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
+            fit <- fitMRME(datBS, start = est_theta, integrControl = integrControl)$estimate
+            fit
+        }
+    }
+    
+    
+    if (detailBS) {
+        return(list(cov = cov(result),
+                    BS_detail = result))
+    } else {
+        return(cov(result))
+    }
+}
+
+
+
+#' 'fitMRME_naive' fits moving-resting model with measurement error
+#' by MLE with a naive composite llk, that pretend two consecutive
+#' increments are independent.
+#' @rdname fitMRME
+#' @export
+fitMRME_naive <- function(data, start, segment = NULL,
+                          lower = c(0, 0, 0, 0),
+                          upper = c(10, 10, 10, 10),
+                          #method = "Nelder-Mead",
+                          #optim.control = list(),
+                          integrControl = integr.control()) {
+    if (is.null(segment)) {
+
+        
+        if (!is.matrix(data)) data <- as.matrix(data)
+        dinc <- apply(data, 2, diff)
+        integrControl <- unlist(integrControl)
+
+        fit <- nloptr::nloptr(x0 = start, eval_f = nllk_mrme_naive_cmp,
+                              data = dinc,
+                              integrControl = integrControl,
+                              lb = lower,
+                              ub = upper,
+                              opts = list("algorithm"   = "NLOPT_LN_COBYLA",
+                                          "print_level" = 3,
+                                          "maxeval" = -5))
+
+        result <- list(estimate    =  fit[[18]],
+                       loglik      = -fit[[17]],
+                       convergence =  fit[[14]])
+
+        return(result)
+        
+        ## fit <- optim(start, nllk_mrme_naive_cmp, data = dinc, method = method,
+        ##              control = optim.control, integrControl = integrControl)
+
+        ## estimate <- fit$par
+        
+        ## return(list(estimate    = estimate,
+        ##             loglik      = -fit$value,
+        ##             convergence = fit$convergence))
+
+        
+    } else {
+
+        
+        ## seasonal process
+        result <- fitMRME_naive_seasonal(data, segment, start,
+                                         lower, upper,
+                                         #method, optim.control,
+                                         integrControl)
+        return(result)
+
+        
+    }
+}
+
+
+#' 'estVarMRMEnaive_Godambe' use Godambe information matrix to obtain variance matrix
+#' of estimators from 'fitMRME_naive'.
+#' @rdname estVarMRME_Godambe
+#' @export
+estVarMRMEnaive_Godambe <- function(est_theta, data, nBS,
+                                    integrControl = integr.control()) {
+    
+    ## get J matrix in Godambe information matrix via bootstrap
+    getJ_MRMEnaive <- function(est_theta, data, nBS, integrControl) {
+        
+        tgrid <- data[, 1]
+        dim <- ncol(data) - 1
+        
+        lamM <- est_theta[1]
+        lamR <- est_theta[2]
+        sigma <- est_theta[3]
+        sig_err <- est_theta[4]
+
+        p_m <- 1/lamM/(1/lamM + 1/lamR)
+        p_r <- 1 - p_m
+
+        integrControl <- unlist(integrControl)
+
+        result <- matrix(NA, ncol = 4, nrow = nBS)
+
+        for (i in seq_len(nBS)) {
+            start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
+            datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
+            datBS <- as.matrix(datBS)
+            dincBS <- apply(datBS, 2, diff)
+            grad_cart <- numDeriv::grad(func = nllk_mrme_naive_cmp, x = est_theta, data = dincBS,
+                                        integrControl = integrControl)
+            result[i, ] <- -grad_cart
+        }
+        
+        cov(result)
+    }
+
+    ## get H matrix in Godambe information matrix
+    getH_MRMEnaive <- function(est_theta, data, integrControl) {
+        data <- as.matrix(data)
+        dinc <- apply(data, 2, diff)
+        integrControl <- unlist(integrControl)
+
+        numDeriv::hessian(func = nllk_mrme_naive_cmp, x = est_theta, data = dinc,
+                          integrControl = integrControl)
+    }
+
+    Jmatrix <- getJ_MRMEnaive(est_theta, data, nBS, integrControl)
+    Hmatrix <- getH_MRMEnaive(est_theta, data, integrControl)
+
+    solve(Hmatrix %*% solve(Jmatrix) %*% Hmatrix)
+
+}
+
+
+#' 'estVarMRMEnaive_pBootstrap' uses parametric bootstrap to obtain variance matrix
+#' of estimators from 'fitMRME_naive'
+#' @rdname estVarMRME_Godambe
+#' @export
+estVarMRMEnaive_pBootstrap <- function(est_theta, data, nBS, detailBS = FALSE,
+                                       integrControl = integr.control()) {
+
+    tgrid <- data[, 1]
+    dim <- ncol(data) - 1
+    
+    lamM <- est_theta[1]
+    lamR <- est_theta[2]
+    sigma <- est_theta[3]
+    sig_err <- est_theta[4]
+
+    p_m <- 1/lamM/(1/lamM + 1/lamR)
+    p_r <- 1 - p_m
+
+    
+    result <- matrix(NA, ncol = 4, nrow = nBS)
+
+    for (i in seq_len(nBS)) {
+        start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
+        datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
+        result[i, ] <- fitMRME_naive(datBS, start = est_theta,
+                                     integrControl = integrControl)$estimate
+    }
+
+    if (detailBS) {
+        return(list(cov = cov(result),
+                    BS_detail = result))
+    } else {
+        return(cov(result))
+    }
+}
+
+
+
+
+
+#' 'fitMRMEapprox' also fits moving-resting model. However, in this function,
+#' the gaussian error is approximated with two discrete distributions.
+#'
+#' @param approx_norm_even,approx_norm_odd numeric matrixes specify the
+#'     discrete distributions used to approximate standard normal distribution.
+#'     The first column is support of discrete distribution and the second
+#'     column is probability mass function. \code{approx_norm_even} is used to
+#'     approximate even step error and \code{approx_norm_odd} is used to
+#'     approximate odd step error. We mention that the supports of these two
+#'     discrete distributions should not have any common elements.
+#' @rdname fitMRME
+#' @export
+fitMRMEapprox <- function(data, start, segment = NULL,
+                          approx_norm_even = approxNormalOrder(5),
+                          approx_norm_odd  = approxNormalOrder(6),
+                          method = "Nelder-Mead",
+                          optim.control = list(),
+                          integrControl = integr.control()) {
+    if (is.null(segment)) {
+
+        
+        if (!is.matrix(data)) data <- as.matrix(data)
+        dinc <- apply(data, 2, diff)
+        integrControl <- unlist(integrControl)
+        
+        fit <- optim(start, nllk_mrme_approx, data = dinc, method = method,
+                     approx_norm_odd = approx_norm_odd,
+                     approx_norm_even = approx_norm_even,
+                     control = optim.control, integrControl = integrControl)
+        
+        return(list(estimate    = fit$par ,
+                    loglik      = -fit$value,
+                    convergence = fit$convergence))
+
+        
+    } else {
+
+        
+        ## seasonal process
+        result <- fitMRMEapprox_seasonal(data, segment, start,
+                                         approx_norm_odd, approx_norm_even,
+                                         method, optim.control, integrControl)
+        return(result)
+
+        
+    }
+}
+
+
+
+
+
+
+##############################################################
+## the following code is for testing purpose only ############
+nllk_mrme_approx_fixed_sig_err <- function(theta, sig_err, data, integrControl,
+                                           approx_norm_even, approx_norm_odd) {
+    nllk_mrme_approx(c(theta, sig_err), data, integrControl,
+                     approx_norm_even, approx_norm_odd)
+}
+
+fitMRMEapprox_fixedSigErr <- function(data, start, sig_err,
+                                      approx_norm_even = approxNormalOrder(5),
+                                      approx_norm_odd  = approxNormalOrder(6),
+                                      method = "Nelder-Mead",
+                                      optim.control = list(),
+                                      integrControl = integr.control()) {
+    
+    if (!is.matrix(data)) data <- as.matrix(data)
+    dinc <- apply(data, 2, diff)
+    integrControl <- unlist(integrControl)
+    
+    fit <- optim(start, nllk_mrme_approx_fixed_sig_err,
+                 data = dinc, sig_err = sig_err, method = method,
+                 approx_norm_odd = approx_norm_odd,
+                 approx_norm_even = approx_norm_even,
+                 control = optim.control, integrControl = integrControl)
+    
+    return(list(estimate    = fit$par ,
+                loglik      = -fit$value,
+                convergence = fit$convergence))
+    
+}
+
+## test code ends here #####################################
+############################################################
+
+##############################################################
+## the following code is for testing purpose only ############
+## fitMRME_fixed_sig_err <- function(data, start, sig_err,
+##                                   method = "Nelder-Mead",
+##                                   optim.control = list(),
+##                                   integrControl = integr.control()){
+##     ## start here contains lam1, lam0, sigma
+##     ## sig_err should be given as known
+##     if (!is.matrix(data)) data <- as.matrix(data)
+##     dinc <- apply(data, 2, diff)
+##     integrControl <- unlist(integrControl)
+    
+##     fit <- optim(start, nllk_mrme_fixed_sig_err, sig_err = sig_err,
+##                  data = dinc, method = method,
+##                  control = optim.control, integrControl = integrControl)
+
+##     estimate <- fit$par
+    
+##     return(list(estimate    = estimate,
+##                 loglik      = -fit$value,
+##                 convergence = fit$convergence))
+## }
+
+
+## fitMRME_one_chain <- function(data, start,
+##                               method = "Nelder-Mead",
+##                               optim.control = list(),
+##                               integrControl = integr.control()){
+##     ## start here contains lam1, lam0, sigma, sig_err
+##     if (!is.matrix(data)) data <- as.matrix(data)
+##     dinc <- apply(data, 2, diff)
+##     integrControl <- unlist(integrControl)
+    
+##     fit <- optim(start, nllk_mrme_one_chain,
+##                  data = dinc, method = method,
+##                  control = optim.control, integrControl = integrControl)
+
+##     estimate <- fit$par
+    
+##     return(list(estimate    = estimate,
+##                 loglik      = -fit$value,
+##                 convergence = fit$convergence))
+## }
+
+## fitMRME_one_chain_fixed_sig_err <- function(data, start, sig_err,
+##                                             method = "Nelder-Mead",
+##                                             optim.control = list(),
+##                                             integrControl = integr.control()){
+##     ## start here contains lam1, lam0,m sigma
+##     ## sig_err should be given as known
+##     if (!is.matrix(data)) data <- as.matrix(data)
+##     dinc <- apply(data, 2, diff)
+##     integrControl <- unlist(integrControl)
+    
+##     fit <- optim(start, nllk_mrme_one_chain_fixed_sig_err,
+##                  sig_err = sig_err,
+##                  data = dinc, method = method,
+##                  control = optim.control, integrControl = integrControl)
+
+##     estimate <- fit$par
+    
+##     return(list(estimate    = estimate,
+##                 loglik      = -fit$value,
+##                 convergence = fit$convergence))
+## }
+## test code ends here #####################################
+############################################################
+
+
+
 #' Auxiliary for Controlling Numerical Integration
 #'
 #' Auxiliary function for the numerical integration used in the
@@ -629,7 +1266,6 @@ fitMovRes <- function(data, start, likelihood = c("full", "composite"),
 #' A list with components named as the arguments.
 #'
 #' @export
-
 integr.control <- function(rel.tol = .Machine$double.eps^.25,
                            abs.tol = rel.tol, subdivisions = 100L) {
     if (!is.numeric(rel.tol) || rel.tol <= 0) 
@@ -640,21 +1276,111 @@ integr.control <- function(rel.tol = .Machine$double.eps^.25,
         stop("maximum number of subintervals must be > 0")
     list(rel.tol = rel.tol, abs.tol = abs.tol, subdivisions = subdivisions)
 }
-    
 
 
+
+
+#' Auxiliary for Preparing Discrete Distribution
+#' used to approximating Standard Normal Distribution
+#'
+#' Auxiliary for preparing discrete distribution used to
+#' approximate standard normal. This function generates
+#' order statistics of standard normal with same probability
+#' assigned. Then, the discrete distribution is standardized
+#' to variance one and mean zero.
+#'
+#' @param m int, the number of order statistics used
+#'
+#' @details
+#' This function use \code{EnvStats::evNormOrdStats} to get
+#' the order statisics of standard normal distribution. The
+#' same probability is assigned for each order statistics.
+#'
+#'
+#' @return
+#' A numeric matrix with first column is support of discrete
+#' distribution and second column is corresponding p.m.f..
+#'
+#' @seealso \code{EnvStats::evNormOrdStats} for order
+#' statisics of standard normal. \code{\link{fitMRMEapprox}}
+#' for fit MRME with approximated measurement error.
+#'
+#' @author Chaoran Hu
+#'
+#' @export
+approxNormalOrder <- function(m){
+    result <- matrix(1/m, ncol = 2, nrow = m)
+    result[, 1] <- EnvStats::evNormOrdStats(m)
+    var <- sum((result[,1]-mean(result[,1]))^2)/m
+    result[, 1] <- result[, 1] / sqrt(var)
+    result
+}
+
+
+#' 'approxNormalOrder2' generates a even space grid first.
+#' Then, the probability is calculated as normal kernal.
+#' Finally, it is also standardized to variance one and
+#' mean zero.
+#'
+#' @param width the width between two consecutive grid points.
+#'
+#' @rdname approxNormalOrder
+#' @export
+approxNormalOrder2 <- function(m, width) {
+    ## generate grid with even space
+    if (m %% 2 == 0) {
+        grid <- seq(width/2, (m/2-1)*width + width/2, by = width)
+        grid <- c(-rev(grid), grid)
+    } else {
+        grid <- seq(0, ((m-1)/2)*width, by = width)
+        grid <- c(-rev(grid), grid[-1])
+    }
+    ## generate probability with norm kernel
+    result <- cbind(grid, dnorm(grid)/sum(dnorm(grid)))
+    ## standardize it to var 1 and mean 0
+    var <- sum(((result[,1]-mean(result[,1]))^2) * result[, 2])
+    result[, 1] <- result[, 1] / sqrt(var)
+    result
+}
+
+
+
+
+
+
+
+##############################################################
+## the following code is for testing purpose only ############
 ## The R version of composite likelihood estimation
 ## Kept only for comparison check with fitMR using cl = TRUE
-fitMovRes.cl <- function(data, start, logtr = FALSE, method = "Nelder-Mead",
-                         optim.control = list()) {
-    if (!is.matrix(data)) data <- as.matrix(data)
-    dinc <- apply(data, 2, diff)
-    fit <- optim(start, ncllk.m1.inc, data = dinc, method = method,
-                 control = optim.control, logtr = logtr)
-    list(estimate    = fit$par,
-         loglik      = -fit$value,
-         convergence = fit$convergence)
-}
+## fitMovRes.cl <- function(data, start, logtr = FALSE, method = "Nelder-Mead",
+##                          optim.control = list()) {
+##     if (!is.matrix(data)) data <- as.matrix(data)
+##     dinc <- apply(data, 2, diff)
+##     fit <- optim(start, ncllk.m1.inc, data = dinc, method = method,
+##                  control = optim.control, logtr = logtr)
+##     list(estimate    = fit$par,
+##          loglik      = -fit$value,
+##          convergence = fit$convergence)
+## }
+
+
+## ### not public function ###
+## ## llk for moving-resting model with given state
+## ## param data: time state locations
+## llk_mr <- function(data, theta, integrControl = integr.control()) {
+##     if (!all(data[, 2] == 0 | data[, 2] == 1)) stop("state must be 0 or 1")
+##     if (!is.matrix(data)) data <- as.matrix(data)
+##     dinc <- apply(data[, -2], 2, diff)
+##     integrControl <- unlist(integrControl)
+##     mrllk_state(theta, dinc, data[, 2], integrControl)
+## }
+## test code ends here #####################################
+############################################################
+
+
+
+
 
 
 ## dx <- function(x, t, lamM, lamR, Sigma) {
