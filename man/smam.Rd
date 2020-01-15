@@ -3,7 +3,6 @@
 \docType{package}
 \name{smam}
 \alias{smam}
-\alias{smam-package}
 \title{smam: Statistical Modeling of Animal Movements}
 \description{
 Animal movement models including moving-resting process
