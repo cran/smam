@@ -5,13 +5,13 @@ citEntry(entry = "Manual",
          author = personList(as.person("Chaoran Hu"),
                              as.person("Vladimir Pozdnyakov"),
                              as.person("Jun Yan")),
-         note = "R package version 0.5.3",
+         note = "R package version 0.5.4",
          year =	"2020",
          url = "https://github.com/ChaoranHu/smam",
          
          textVersion = paste("Hu, C., Pozdnyakov, V., Yan, J. (2020). smam:",
                              "Statistical Modeling of Animal Movement.",
-                             "R package version 0.5.3",
+                             "R package version 0.5.4",
                              "https://github.com/ChaoranHu/smam")
 )
 
@@ -33,18 +33,20 @@ citEntry(entry = "Article",
 )
 
 citEntry(entry = "Article",
-         title = "Discretely observed Brownian motion governed by telegraph process: estimation",
+         title = "Discretely observed Brownian motion governed by telegraph process: Estimation",
          author = personList(as.person("Vladimir Pozdnyakov"),
                              as.person("L. Mark Elbroch"),
                              as.person("Anthony Labarga"),
                              as.person("Thomas Meyer"),
                              as.person("Jun Yan")),
          journal = "Methodology and Computing in Applied Probability",
-         year = "2017",
+         year = "2019",
+         volume = "21",
+         pages = "907--920",
          url = "https://doi.org/10.1007/s11009-017-9547-6",
 
          textVersion =
-  paste("Pozdnyakov, V., Elbroch, L., Labarga, A., Meyer, T., and Yan, J. (2017) Discretely observed Brownian motion governed by telegraph process: estimation. Methodology and Computing in Applied Probability. 10.1007/s11009-017-9547-6.")
+  paste("Pozdnyakov, V., Elbroch, L., Labarga, A., Meyer, T., and Yan, J. (2017) Discretely observed Brownian motion governed by telegraph process: estimation. Methodology and Computing in Applied Probability, 21: 907--920. doi:10.1007/s11009-017-9547-6.")
 )
 
 citEntry(entry = "Article",
@@ -68,20 +70,32 @@ citEntry(entry = "Article",
 )
 
 citEntry(entry = "Article",
-         title = "On estimation for Brownian motion governed by telegraph process with multiple off states",
+         title = "On Estimation for Brownian Motion Governed by Telegraph Process with Multiple Off States",
          author = personList(as.person("Vladimir Pozdnyakov"),
                              as.person("L. Mark Elbroch"),
                              as.person("Chaoran Hu"),
                              as.person("Thomas Meyer"),
                              as.person("Jun Yan")),
-         journal = "ArXiv e-prints",
-         archivePrefix = "arXiv",
-         eprint = "1806.00849",
-         primaryClass = "stat.ME",
-         year = "2018",
-         month = "jun",
-         adsurl = "http://adsabs.harvard.edu/abs/2018arXiv180600849P",
-         adsnote = "Provided by the SAO/NASA Astrophysics Data System",
+         journal = "Methodology and Computing in Applied Probability",
+         year = "2020",
+         volume = "22",
+         pages = "1275--1291",
+         url = "https://doi.org/10.1007/s11009-020-09774-1",
          textVersion =
-             paste("Pozdnyakov, V., Elbroch, L., Hu, C., Meyer, T., and Yan, J. (2018+) On estimation for Brownian motion governed by telegraph process with multiple off states. <arXiv:1806.00849>")
+             paste("Pozdnyakov, V., Elbroch, L.M., Hu, C. et al. On Estimation for Brownian Motion Governed by Telegraph Process with Multiple Off States. Methodol Comput Appl Probab 22, 1275–1291 (2020). https://doi.org/10.1007/s11009-020-09774-1")
+)
+
+citEntry(entry = "misc",
+         title = "Moving-Resting Process with Measurement Error in Animal Movement Modeling",
+         author = personList(as.person("Chaoran Hu"),
+                             as.person("L. Mark Elbroch"),
+                             as.person("Thomas Meyer"),
+                             as.person("Vladimir Pozdnyakov"),
+                             as.person("Jun Yan")),
+         year="2020",
+         eprint="2004.00160",
+         archivePrefix="arXiv",
+         primaryClass="stat.ME",
+         textVersion =
+             paste("Hu, C., Elbroch, L.M., Meyer, T., Pozdnyakov, V., and Yan, J. (2020) Moving-Resting Process with Measurement Error in Animal Movement Modeling. arXiv preprint. arXiv:2004.00160")
 )

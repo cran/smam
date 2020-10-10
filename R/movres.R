@@ -1,4 +1,4 @@
-#' @importFrom stats dnorm integrate optim rexp rnorm cov
+#' @importFrom stats dnorm integrate optim rexp rnorm cov na.omit
 #' @importFrom methods is
 #' @importFrom numDeriv hessian
 #' @importFrom Rcpp evalCpp
@@ -134,6 +134,7 @@ simmr.state <- function(time, brtimes, t0moving) {
 #' @export
 
 rMR <- function(time, lamM, lamR, sigma, s0, dim = 2, state = FALSE) {
+    time <- time - time[1]
     stopifnot(s0 %in% c("m", "r"))
     t0moving <- (s0 == "m")
     lam1 <- if (t0moving) lamM else lamR
@@ -176,7 +177,8 @@ rMovRes <- function(time, lamM, lamR, sigma, s0, dim = 2) {
 #' @rdname rMR
 #' @export
 rMRME <- function(time, lamM, lamR, sigma, sig_err, s0, dim = 2, state = FALSE){
-    dat <- rMR(time, lamM, lamR, sigma, s0, dim = 2, state)
+    time <- time - time[1]
+    dat <- rMR(time, lamM, lamR, sigma, s0, dim = dim, state)
     if (state) {
         for (i in 1:dim) {
             dat[, i+2] <- dat[, i+2] + rnorm(length(time), mean = 0, sd = sig_err)
@@ -542,7 +544,8 @@ ncllk.m1.inc <- function(theta, data, logtr = FALSE) { ## data is increment alre
 #' doi:10.1007/s11009-017-9547-6.
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
+#' ## time consuming example
 #' tgrid <- seq(0, 10, length=500)
 #' set.seed(123)
 #' ## make it irregularly spaced
@@ -564,7 +567,6 @@ ncllk.m1.inc <- function(theta, data, logtr = FALSE) { ## data is increment alre
 #' head(dat.segment)
 #' fit.segment
 #' }
-#' 
 #' @export
 fitMR <- function(data, start, segment = NULL,
                   likelihood = c("full", "composite"),
@@ -676,31 +678,30 @@ fitMovRes <- function(data, start, likelihood = c("full", "composite"),
 #' @author Chaoran Hu
 #' 
 #' @examples
-#' \donttest{
-#' tgrid <- seq(0, 10*100, length=100)
-#' set.seed(123)
-#' dat <- rMRME(tgrid, 1, 0.5, 1, 0.01, "m")
+#' ## time consuming example
+#' #tgrid <- seq(0, 10*100, length=100)
+#' #set.seed(123)
+#' #dat <- rMRME(tgrid, 1, 0.5, 1, 0.01, "m")
 #'
 #' ## fit whole dataset to the MRME model
-#' fit <- fitMRME(dat, start=c(1, 0.5, 1, 0.01))
-#' fit
+#' #fit <- fitMRME(dat, start=c(1, 0.5, 1, 0.01))
+#' #fit
 #'
 #' ## fit whole dataset to the MRME model with naive composite likelihood
-#' fit.naive <- fitMRME_naive(dat, start=c(1, 0.5, 1, 0.01))
-#' fit.naive
+#' #fit.naive <- fitMRME_naive(dat, start=c(1, 0.5, 1, 0.01))
+#' #fit.naive
 #'
 #' ## fit whole dataset to the MRME model with approximate error
-#' fit.approx <- fitMRMEapprox(dat, start=c(1, 0.5, 1, 0.01))
-#' fit.approx
+#' #fit.approx <- fitMRMEapprox(dat, start=c(1, 0.5, 1, 0.01))
+#' #fit.approx
 #'
 #' ## fit part of dataset to the MR model
-#' batch <- c(rep(0, 5), rep(1, 17), rep(0, 4), rep(2, 30), rep(0, 4), rep(3, 40))
-#' dat.segment <- cbind(dat, batch)
-#' fit.segment <- fitMRME(dat.segment, start = c(1, 0.5, 1, 0.01), segment = "batch")
-#' fit.segment.approx <- fitMRMEapprox(dat.segment, start = c(1, 0.5, 1, 0.01), segment = "batch")
-#' head(dat.segment)
-#' fit.segment
-#' }
+#' #batch <- c(rep(0, 5), rep(1, 17), rep(0, 4), rep(2, 30), rep(0, 4), rep(3, 40))
+#' #dat.segment <- cbind(dat, batch)
+#' #fit.segment <- fitMRME(dat.segment, start = c(1, 0.5, 1, 0.01), segment = "batch")
+#' #fit.segment.approx <- fitMRMEapprox(dat.segment, start = c(1, 0.5, 1, 0.01), segment = "batch")
+#' #head(dat.segment)
+#' #fit.segment
 #' 
 #' @export
 fitMRME <- function(data, start, segment = NULL,
@@ -760,6 +761,12 @@ fitMRME <- function(data, start, segment = NULL,
 #'
 #' 'estVarMRME_Godambe' uses Godambe information matrix to obtain variance matrix
 #' of estimators from 'fitMRME'.
+#' 'estVarMRME_pBootstrap' uses parametric bootstrap to obtain variance matrix
+#' of estimators from 'fitMRME'.
+#' 'estVarMRMEnaive_Godambe' use Godambe information matrix to obtain variance matrix
+#' of estimators from 'fitMRME_naive'.
+#' 'estVarMRMEnaive_pBootstrap' uses parametric bootstrap to obtain variance matrix
+#' of estimators from 'fitMRME_naive'.
 #'
 #' @param est_theta estimators of MRME model
 #' @param data data used to process estimation
@@ -776,18 +783,23 @@ fitMRME <- function(data, start, segment = NULL,
 #' @author Chaoran Hu
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
+#' ## time consuming example
 #' tgrid <- seq(0, 10*100, length=100)
 #' set.seed(123)
 #' dat <- rMRME(tgrid, 1, 0.5, 1, 0.01, "m")
+#'
 #' estVarMRME_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10)
-#' estVarMRME_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
 #' estVarMRME_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10)
-#' estVarMRME_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
 #' estVarMRMEnaive_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10)
 #' estVarMRMEnaive_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10)
-#' }
 #'
+#' estVarMRME_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+#' estVarMRME_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+#' estVarMRMEnaive_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+#' estVarMRMEnaive_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+#' estVarMRMEnaive_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+#' }
 #' @export
 estVarMRME_Godambe <- function(est_theta, data, nBS,
                                numThreads = 1,
@@ -849,12 +861,17 @@ estVarMRME_Godambe <- function(est_theta, data, nBS,
                                             method = gradMethod,
                                             data = dincBS,
                                             integrControl = integrControl)
+                
                 -grad_cart
             }
 
         }
+
+        ## test code only ##
+        ## print(result)
+        ## test code only ##
         
-        cov(result)
+        cov(na.omit(result))
     }
 
     ## get H matrix in Godambe information matrix
@@ -874,8 +891,7 @@ estVarMRME_Godambe <- function(est_theta, data, nBS,
 
 }
 
-#' 'estVarMRME_pBootstrap' uses parametric bootstrap to obtain variance matrix
-#' of estimators from 'fitMRME'
+
 #' @param detailBS whether or not output estimation results during bootstrap,
 #' which can be used to generate bootstrap CI.
 #' @rdname estVarMRME_Godambe
@@ -928,10 +944,10 @@ estVarMRME_pBootstrap <- function(est_theta, data, nBS, detailBS = FALSE,
     
     
     if (detailBS) {
-        return(list(cov = cov(result),
+        return(list(cov = cov(na.omit(result)),
                     BS_detail = result))
     } else {
-        return(cov(result))
+        return(cov(na.omit(result)))
     }
 }
 
@@ -943,7 +959,7 @@ estVarMRME_pBootstrap <- function(est_theta, data, nBS, detailBS = FALSE,
 #' @rdname fitMRME
 #' @export
 fitMRME_naive <- function(data, start, segment = NULL,
-                          lower = c(0, 0, 0, 0),
+                          lower = c(0.000001, 0.000001, 0.000001, 0.000001),
                           upper = c(10, 10, 10, 10),
                           #method = "Nelder-Mead",
                           #optim.control = list(),
@@ -995,15 +1011,16 @@ fitMRME_naive <- function(data, start, segment = NULL,
 }
 
 
-#' 'estVarMRMEnaive_Godambe' use Godambe information matrix to obtain variance matrix
-#' of estimators from 'fitMRME_naive'.
+
 #' @rdname estVarMRME_Godambe
 #' @export
 estVarMRMEnaive_Godambe <- function(est_theta, data, nBS,
+                                    numThreads = 1,
+                                    gradMethod = "simple",
                                     integrControl = integr.control()) {
     
     ## get J matrix in Godambe information matrix via bootstrap
-    getJ_MRMEnaive <- function(est_theta, data, nBS, integrControl) {
+    getJ_MRMEnaive <- function(est_theta, data, nBS, numThreads, gradMethod, integrControl) {
         
         tgrid <- data[, 1]
         dim <- ncol(data) - 1
@@ -1018,19 +1035,53 @@ estVarMRMEnaive_Godambe <- function(est_theta, data, nBS,
 
         integrControl <- unlist(integrControl)
 
-        result <- matrix(NA, ncol = 4, nrow = nBS)
+        if (numThreads <= 1) {
 
-        for (i in seq_len(nBS)) {
-            start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
-            datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
-            datBS <- as.matrix(datBS)
-            dincBS <- apply(datBS, 2, diff)
-            grad_cart <- numDeriv::grad(func = nllk_mrme_naive_cmp, x = est_theta, data = dincBS,
-                                        integrControl = integrControl)
-            result[i, ] <- -grad_cart
+            result <- matrix(NA, ncol = 4, nrow = nBS)
+
+            for (i in seq_len(nBS)) {
+                start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
+                datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
+                datBS <- as.matrix(datBS)
+                dincBS <- apply(datBS, 2, diff)
+                grad_cart <- numDeriv::grad(func = nllk_mrme_naive_cmp, x = est_theta,
+                                            method = gradMethod,
+                                            data = dincBS,
+                                            integrControl = integrControl)
+                result[i, ] <- -grad_cart
+            }
+
+        } else {
+
+            ## create parallel backend
+            cl = parallel::makeCluster(numThreads)
+            on.exit(close(pb), add = TRUE)
+            on.exit(parallel::stopCluster(cl), add = TRUE)
+                                        #doParallel::registerDoParallel(cl)
+            doSNOW::registerDoSNOW(cl)
+            pb <- utils::txtProgressBar(max = nBS, style = 3)
+            progress <- function(n) utils::setTxtProgressBar(pb, n)
+            opts <- list(progress = progress)
+
+            i = 1 #Dummy line for Rstudio warnings
+
+            result <- foreach(i = 1:nBS, .combine = rbind, .options.snow = opts) %dopar% {
+                start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
+                datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
+                datBS <- as.matrix(datBS)
+                dincBS <- apply(datBS, 2, diff)
+                grad_cart <- numDeriv::grad(func = nllk_mrme_naive_cmp, x = est_theta,
+                                            method = gradMethod,
+                                            data = dincBS,
+                                            integrControl = integrControl)
+                -grad_cart
+            }
+
+
+            
         }
         
-        cov(result)
+        cov(na.omit(result))
     }
 
     ## get H matrix in Godambe information matrix
@@ -1043,7 +1094,7 @@ estVarMRMEnaive_Godambe <- function(est_theta, data, nBS,
                           integrControl = integrControl)
     }
 
-    Jmatrix <- getJ_MRMEnaive(est_theta, data, nBS, integrControl)
+    Jmatrix <- getJ_MRMEnaive(est_theta, data, nBS, numThreads, gradMethod, integrControl)
     Hmatrix <- getH_MRMEnaive(est_theta, data, integrControl)
 
     solve(Hmatrix %*% solve(Jmatrix) %*% Hmatrix)
@@ -1051,11 +1102,11 @@ estVarMRMEnaive_Godambe <- function(est_theta, data, nBS,
 }
 
 
-#' 'estVarMRMEnaive_pBootstrap' uses parametric bootstrap to obtain variance matrix
-#' of estimators from 'fitMRME_naive'
+
 #' @rdname estVarMRME_Godambe
 #' @export
 estVarMRMEnaive_pBootstrap <- function(est_theta, data, nBS, detailBS = FALSE,
+                                       numThreads = 1,
                                        integrControl = integr.control()) {
 
     tgrid <- data[, 1]
@@ -1069,21 +1120,43 @@ estVarMRMEnaive_pBootstrap <- function(est_theta, data, nBS, detailBS = FALSE,
     p_m <- 1/lamM/(1/lamM + 1/lamR)
     p_r <- 1 - p_m
 
-    
-    result <- matrix(NA, ncol = 4, nrow = nBS)
 
-    for (i in seq_len(nBS)) {
-        start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
-        datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
-        result[i, ] <- fitMRME_naive(datBS, start = est_theta,
-                                     integrControl = integrControl)$estimate
+    if (numThreads <= 1) {
+        result <- matrix(NA, ncol = 4, nrow = nBS)
+
+        for (i in seq_len(nBS)) {
+            start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
+            datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
+            result[i, ] <- fitMRME_naive(datBS, start = est_theta,
+                                         integrControl = integrControl)$estimate
+        }
+
+    } else {
+        ## create parallel backend
+        cl = parallel::makeCluster(numThreads)
+        on.exit(close(pb), add = TRUE)
+        on.exit(parallel::stopCluster(cl), add = TRUE)
+        doSNOW::registerDoSNOW(cl)
+        pb <- utils::txtProgressBar(max = nBS, style = 3)
+        progress <- function(n) utils::setTxtProgressBar(pb, n)
+        opts <- list(progress = progress)
+
+        i = 1
+        result <- foreach(i = 1:nBS, .combine = rbind, .options.snow = opts) %dopar% {
+            start_state <- sample(c("m", "r"), size = 1, prob = c(p_m, p_r))
+            datBS <- rMRME(tgrid, lamM, lamR, sigma, sig_err, s0 = start_state, dim = dim)
+            fit <- fitMRME_naive(datBS, start = est_theta,
+                                 integrControl = integrControl)$estimate
+            fit
+        }
     }
-
+    
+    
     if (detailBS) {
-        return(list(cov = cov(result),
+        return(list(cov = cov(na.omit(result)),
                     BS_detail = result))
     } else {
-        return(cov(result))
+        return(cov(na.omit(result)))
     }
 }
 

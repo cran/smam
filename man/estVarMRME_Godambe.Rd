@@ -25,13 +25,21 @@ estVarMRME_pBootstrap(
   integrControl = integr.control()
 )
 
-estVarMRMEnaive_Godambe(est_theta, data, nBS, integrControl = integr.control())
+estVarMRMEnaive_Godambe(
+  est_theta,
+  data,
+  nBS,
+  numThreads = 1,
+  gradMethod = "simple",
+  integrControl = integr.control()
+)
 
 estVarMRMEnaive_pBootstrap(
   est_theta,
   data,
   nBS,
   detailBS = FALSE,
+  numThreads = 1,
   integrControl = integr.control()
 )
 }
@@ -60,20 +68,31 @@ variance-covariance matrix of estimators
 \description{
 'estVarMRME_Godambe' uses Godambe information matrix to obtain variance matrix
 of estimators from 'fitMRME'.
+'estVarMRME_pBootstrap' uses parametric bootstrap to obtain variance matrix
+of estimators from 'fitMRME'.
+'estVarMRMEnaive_Godambe' use Godambe information matrix to obtain variance matrix
+of estimators from 'fitMRME_naive'.
+'estVarMRMEnaive_pBootstrap' uses parametric bootstrap to obtain variance matrix
+of estimators from 'fitMRME_naive'.
 }
 \examples{
-\donttest{
+\dontrun{
+## time consuming example
 tgrid <- seq(0, 10*100, length=100)
 set.seed(123)
 dat <- rMRME(tgrid, 1, 0.5, 1, 0.01, "m")
+
 estVarMRME_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10)
-estVarMRME_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
 estVarMRME_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10)
-estVarMRME_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
 estVarMRMEnaive_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10)
 estVarMRMEnaive_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10)
-}
 
+estVarMRME_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+estVarMRME_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+estVarMRMEnaive_Godambe(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+estVarMRMEnaive_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+estVarMRMEnaive_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
+}
 }
 \author{
 Chaoran Hu
