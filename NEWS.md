@@ -1,3 +1,15 @@
+# CHANGES IN smam VERSION 0.6.0
+
+## MAJOR CHANGES
+
+* Added moving-moving process include `rMM`(simulation), `fitMM`(point estimator), `estVarMM`(standard error).
+
+## MINOR CHANGES
+
+* Fixed bugs in seasonal toolbox.
+
+* Updated .cpp files to adapt the update of R package `Rcpp`.
+
 # CHANGES IN smam VERSION 0.5.4
 
 ## MINOR CHANGES
