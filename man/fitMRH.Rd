@@ -11,7 +11,8 @@ fitMRH(
   numThreads = RcppParallel::defaultNumThreads() * 3/4,
   lower = c(0.001, 0.001, 0.001, 0.001, 0.001),
   upper = c(10, 10, 10, 10, 0.999),
-  integrControl = integr.control()
+  integrControl = integr.control(),
+  print_level = 3
 )
 }
 \arguments{
@@ -40,6 +41,10 @@ is less or equal to 1, the serial computation will be processed.}
 
 \item{integrControl}{Integration control vector includes rel.tol,
 abs.tol, and subdivisions.}
+
+\item{print_level}{print_level passed to nloptr::nloptr. Possible values: 0 (default):
+no output; 1: show iteration number and value of objective function; 2: 1 + show
+value of (in)equalities; 3: 2 + show value of controls.}
 }
 \value{
 A list of estimation result with following components:
@@ -47,6 +52,7 @@ A list of estimation result with following components:
 \item{loglik}{maximized loglikelihood or composite loglikelihood
 evaluated at the estimate}
 \item{convergence}{convergence code from \code{nloptr}}
+\item{data}{fitted data}
 }
 \description{
 Fit a Moving-Resting-Handling Model with Embedded Brownian Motion with
@@ -73,9 +79,10 @@ fit.segment
 
 }
 \references{
-Pozdnyakov, V., Elbroch, L.M., Hu, C., Meyer, T., and Yan, J. (2018+)
-On estimation for Brownian motion governed by telegraph process with
-multiple off states. <arXiv:1806.00849>
+Pozdnyakov, V., Elbroch, L.M., Hu, C. et al. On Estimation for
+Brownian Motion Governed by Telegraph Process with Multiple Off States.
+Methodol Comput Appl Probab 22, 1275–1291 (2020).
+doi:10.1007/s11009-020-09774-1
 }
 \seealso{
 \code{\link{rMRH}} for simulation.

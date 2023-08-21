@@ -1,3 +1,27 @@
+# CHANGES IN smam VERSION 0.7.0
+
+## MAJOR CHANGES
+
+* Added generic function `estimate` to retrieve estimation result for all fit functions.
+
+* Added generic function `vcov` to evaluate covariance matrix of estimate for all fit functions' result.
+
+* Added a new vignette.
+
+* Added function `rBB` for simulation Brownian bridge.
+
+* Added function `rMRB` for simulation moving-resting bridge.
+
+## MINOR CHANGES
+
+* Updated package description by adding new references.
+
+* Updated citation information.
+
+* Added `print_level` to `fitMRME` and `fitMRH` that controls how much output is shown during the optimization process.
+
+* Added appropriate PKGNAME-package \alias as per "Documenting packages" in R-exts.
+
 # CHANGES IN smam VERSION 0.6.0
 
 ## MAJOR CHANGES

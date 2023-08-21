@@ -12,6 +12,7 @@ fitMRME(
   segment = NULL,
   lower = c(1e-06, 1e-06, 1e-06, 1e-06),
   upper = c(10, 10, 10, 10),
+  print_level = 3,
   integrControl = integr.control()
 )
 
@@ -55,6 +56,10 @@ whole dataset to fit the model.}
 
 \item{lower, upper}{Lower and upper bound for optimization.}
 
+\item{print_level}{print_level passed to nloptr::nloptr. Possible values: 0 (default):
+no output; 1: show iteration number and value of objective function; 2: 1 + show
+value of (in)equalities; 3: 2 + show value of controls.}
+
 \item{integrControl}{a list of control parameters for the \code{integrate}
 function: rel.tol, abs.tol, subdivision.}
 
@@ -76,6 +81,7 @@ a list of the following components:
 \item{loglik}{maximized loglikelihood or composite loglikelihood
 evaluated at the estimate}
 \item{convergence}{convergence code from \code{optim}}
+\item{data}{fitted data}
 }
 \description{
 'fitMRME' fits a Moving-Resting Model with Measurement Error. The measurement
@@ -111,8 +117,9 @@ is seasonal analysis.
 
 }
 \references{
-Hu, C., Pozdnyakov, V., and Yan, J. Moving-resting model with measurement
-error. In process.
+Hu, C., Elbroch, L.M., Meyer, T., Pozdnyakov, V. and Yan, J. (2021),
+Moving-resting process with measurement error in animal movement modeling.
+Methods in Ecology and Evolution. doi:10.1111/2041-210X.13694
 }
 \author{
 Chaoran Hu

@@ -603,11 +603,14 @@ fitMR <- function(data, start, segment = NULL,
             ## not -hess because objfun is negative llk already
         }
         
-        return(list(estimate    = estimate,
-                    varest      = varest,
-                    loglik      = -fit$value,
-                    convergence = fit$convergence,
-                    likelihood  = likelihood))
+        result <- return(list(estimate    = estimate,
+                              varest      = varest,
+                              loglik      = -fit$value,
+                              convergence = fit$convergence,
+                              likelihood  = likelihood))
+        
+        attr(result, "class") <- "smam_mr"
+        return(result)
 
         
     } else {
@@ -616,6 +619,7 @@ fitMR <- function(data, start, segment = NULL,
         ## seasonal process
         result <- fitMR_seasonal(data, segment, start, likelihood,
                                  logtr, method, optim.control, integrControl)
+        attr(result, "class") <- "smam_mr"
         return(result)
 
         
@@ -659,6 +663,9 @@ fitMovRes <- function(data, start, likelihood = c("full", "composite"),
 #'     in the given \code{data.frame}. The default value, \code{NULL}, means using
 #'     whole dataset to fit the model.
 #' @param lower,upper Lower and upper bound for optimization.
+#' @param print_level print_level passed to nloptr::nloptr. Possible values: 0 (default):
+#'     no output; 1: show iteration number and value of objective function; 2: 1 + show
+#'     value of (in)equalities; 3: 2 + show value of controls.
 #' @param method the method argument to feed \code{optim}.
 #' @param optim.control a list of control to be passed to \code{optim}.
 #' @param integrControl a list of control parameters for the \code{integrate}
@@ -670,10 +677,12 @@ fitMovRes <- function(data, start, likelihood = c("full", "composite"),
 #' \item{loglik}{maximized loglikelihood or composite loglikelihood
 #' evaluated at the estimate}
 #' \item{convergence}{convergence code from \code{optim}}
+#' \item{data}{fitted data}
 #' 
 #' @references
-#' Hu, C., Pozdnyakov, V., and Yan, J. Moving-resting model with measurement
-#' error. In process.
+#' Hu, C., Elbroch, L.M., Meyer, T., Pozdnyakov, V. and Yan, J. (2021),
+#' Moving-resting process with measurement error in animal movement modeling.
+#' Methods in Ecology and Evolution. doi:10.1111/2041-210X.13694
 #'
 #' @author Chaoran Hu
 #' 
@@ -707,6 +716,7 @@ fitMovRes <- function(data, start, likelihood = c("full", "composite"),
 fitMRME <- function(data, start, segment = NULL,
                     lower = c(0.000001, 0.000001, 0.000001, 0.000001),
                     upper = c(10, 10, 10, 10),
+                    print_level = 3,
                     #method = "Nelder-Mead",
                     #optim.control = list(),
                     integrControl = integr.control()) {
@@ -723,12 +733,15 @@ fitMRME <- function(data, start, segment = NULL,
                               lb = lower,
                               ub = upper,
                               opts = list("algorithm"   = "NLOPT_LN_COBYLA",
-                                          "print_level" = 3,
+                                          "print_level" = print_level,
                                           "maxeval" = -5))
 
         result <- list(estimate    =  fit[[18]],
                        loglik      = -fit[[17]],
-                       convergence =  fit[[14]])
+                       convergence =  fit[[14]],
+                       data = data)
+
+        attr(result, "class") <- "smam_mrme"
 
         return(result)
 
@@ -748,9 +761,14 @@ fitMRME <- function(data, start, segment = NULL,
         
         ## seasonal process
         result <- fitMRME_seasonal(data, segment, start,
-                                   lower, upper,
+                                   lower, upper, print_level,
                                    #method, optim.control,
                                    integrControl)
+
+        result$data <- data
+
+        attr(result, "class") <- "smam_mrme"
+
         return(result)
 
         
@@ -800,6 +818,9 @@ fitMRME <- function(data, start, segment = NULL,
 #' estVarMRMEnaive_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
 #' estVarMRMEnaive_pBootstrap(c(1, 0.5, 1, 0.01), dat, nBS = 10, numThreads = 6)
 #' }
+
+
+
 #' @export
 estVarMRME_Godambe <- function(est_theta, data, nBS,
                                numThreads = 1,
@@ -950,7 +971,6 @@ estVarMRME_pBootstrap <- function(est_theta, data, nBS, detailBS = FALSE,
         return(cov(na.omit(result)))
     }
 }
-
 
 
 #' 'fitMRME_naive' fits moving-resting model with measurement error

@@ -25,17 +25,22 @@
 ##' @param lower,upper Lower and upper bound for optimization.
 ##' @param integrControl Integration control vector includes rel.tol,
 ##'    abs.tol, and subdivisions.
+##' @param print_level print_level passed to nloptr::nloptr. Possible values: 0 (default):
+##'     no output; 1: show iteration number and value of objective function; 2: 1 + show
+##'     value of (in)equalities; 3: 2 + show value of controls.
 ##'
 ##' @return A list of estimation result with following components:
 ##' \item{estimate}{the estimated parameter vector}
 ##' \item{loglik}{maximized loglikelihood or composite loglikelihood
 ##' evaluated at the estimate}
 ##' \item{convergence}{convergence code from \code{nloptr}}
+##' \item{data}{fitted data}
 ##'
 ##' @references
-##' Pozdnyakov, V., Elbroch, L.M., Hu, C., Meyer, T., and Yan, J. (2018+)
-##' On estimation for Brownian motion governed by telegraph process with
-##' multiple off states. <arXiv:1806.00849>
+##' Pozdnyakov, V., Elbroch, L.M., Hu, C. et al. On Estimation for
+##' Brownian Motion Governed by Telegraph Process with Multiple Off States.
+##' Methodol Comput Appl Probab 22, 1275–1291 (2020).
+##' doi:10.1007/s11009-020-09774-1
 ##'
 ##' @seealso \code{\link{rMRH}} for simulation.
 ##'
@@ -62,7 +67,8 @@ fitMRH <- function(data, start, segment = NULL,
                    numThreads = RcppParallel::defaultNumThreads() * 3 / 4,
                    lower = c(0.001, 0.001, 0.001, 0.001, 0.001),
                    upper = c(   10,    10,    10,    10, 0.999),
-                   integrControl = integr.control()) {
+                   integrControl = integr.control(),
+                   print_level = 3) {
     if (is.null(segment)) {
         
 
@@ -79,12 +85,15 @@ fitMRH <- function(data, start, segment = NULL,
                                   lb = lower,
                                   ub = upper,
                                   opts = list("algorithm"   = "NLOPT_LN_COBYLA",
-                                              "print_level" = 3,
+                                              "print_level" = print_level,
                                               "maxeval" = -5))
 
             result <- list(estimate    =  fit[[18]],
                            loglik      = -fit[[17]],
-                           convergence =  fit[[14]])
+                           convergence =  fit[[14]],
+                           data = data)
+            attr(result, "class") <- "smam_mrh"
+
 
             ## fit <- optim(par = start, fn = nllk_fwd_ths,
             ##              data = dinc,
@@ -104,7 +113,11 @@ fitMRH <- function(data, start, segment = NULL,
         } else { ## parallel normal
 
             
-            result <- fitMRH_parallel(data, start, lower, upper, numThreads, integrControl)
+            result <- fitMRH_parallel(data, start, lower, upper, numThreads,
+                                      integrControl, print_level)
+            result$data <- data
+            attr(result, "class") <- "smam_mrh"
+
             return(result)
 
             
@@ -116,7 +129,9 @@ fitMRH <- function(data, start, segment = NULL,
         
         if (numThreads < 1) numThreads <- 1
         result <- fitMRH_seasonal(data, segment, start,
-                                  lower, upper, numThreads, integrControl)
+                                  lower, upper, numThreads, integrControl, print_level)
+        result$data <- data
+        attr(result, "class") <- "smam_mrh"
         return(result)
 
         
@@ -125,7 +140,7 @@ fitMRH <- function(data, start, segment = NULL,
 
 ## internal function
 fitMRH_parallel <- function(data, start, lower, upper,
-                            numThreads, integrControl) {
+                            numThreads, integrControl, print_level) {
     if (!is.matrix(data)) data <- as.matrix(data)
     dinc <- apply(data, 2, diff)
     integrControl <- unlist(integrControl)
@@ -142,7 +157,7 @@ fitMRH_parallel <- function(data, start, lower, upper,
                           lb = lower,
                           ub = upper,
                           opts = list("algorithm"   = "NLOPT_LN_COBYLA",
-                                      "print_level" = 3,
+                                      "print_level" = print_level,
                                       "maxeval" = -5))
 
     result <- list(estimate    =  fit[[18]],
