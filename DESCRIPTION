@@ -1,7 +1,7 @@
 Package: smam
 Title: Statistical Modeling of Animal Movements
-Version: 0.7.0
-Date: 2023-08-19
+Version: 0.7.1
+Date: 2023-11-29
 Authors@R: c(
     person("Chaoran", "Hu", email = "chaoran.hu@uconn.edu", role = c("aut", "cre")),
     person("Vladimir", "Pozdnyakov", email = "vladimir.pozdnyakov@uconn.edu", role = "aut"),
@@ -31,10 +31,10 @@ BugReports: https://github.com/ChaoranHu/smam/issues
 URL: https://github.com/ChaoranHu/smam
 RoxygenNote: 7.2.3
 NeedsCompilation: yes
-Packaged: 2023-08-19 23:53:23 UTC; chaoranhu
+Packaged: 2023-11-29 21:43:51 UTC; chaoranhu
 Author: Chaoran Hu [aut, cre],
   Vladimir Pozdnyakov [aut],
   Jun Yan [aut]
 Maintainer: Chaoran Hu <chaoran.hu@uconn.edu>
 Repository: CRAN
-Date/Publication: 2023-08-21 08:10:02 UTC
+Date/Publication: 2023-11-30 08:00:02 UTC

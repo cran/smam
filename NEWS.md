@@ -1,3 +1,9 @@
+# CHANGES IN smam VERSION 0.7.1
+
+## MINOR CHANGES
+
+* Updated 'RcppExports.cpp' to solve 'warning: format string is not a string literal (potentially insecure) [-Wformat-security]'
+
 # CHANGES IN smam VERSION 0.7.0
 
 ## MAJOR CHANGES
